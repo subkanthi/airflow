@@ -28,7 +28,7 @@ Choosing database backend
 -------------------------
 
 If you want to take a real test drive of Airflow, you should consider setting up a database backend to **MySQL** and **PostgresSQL**.
-By default, Airflow uses **SQLite**, which is not intended for development purposes only.
+By default, Airflow uses **SQLite**, which is intended for development purposes only.
 
 Airflow supports the following database engine versions, so make sure which version you have. Old versions may not support all SQL statements.
 
@@ -147,7 +147,7 @@ In the example below, a database ``airflow_db`` and user  with username ``airflo
 .. code-block:: sql
 
    CREATE DATABASE airflow_db;
-   CREATE USER airflow_user WITH PASSWORD 'airflow_user';
+   CREATE USER airflow_user WITH PASSWORD 'airflow_pass';
    GRANT ALL PRIVILEGES ON DATABASE airflow_db TO airflow_user;
 
 You may need to update your Postgres ``pg_hba.conf`` to add the
