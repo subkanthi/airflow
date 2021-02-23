@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,12 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-echo
-echo "Waiting for all PROD images to appear: ${CURRENT_PYTHON_MAJOR_MINOR_VERSIONS_AS_STRING}"
-echo
-
-for PYTHON_MAJOR_MINOR_VERSION in ${CURRENT_PYTHON_MAJOR_MINOR_VERSIONS_AS_STRING}
-do
-    export PYTHON_MAJOR_MINOR_VERSION
-    "$( dirname "${BASH_SOURCE[0]}" )/ci_wait_for_prod_image.sh"
-done
+################################
+## Airflow ConfigMap
+#################################
+{{- if .Values.webserver.webserverConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-webserver-config
+  labels:
+    tier: airflow
+    component: config
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+{{- with .Values.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+data:
+  webserver_config.py: |
+    {{- .Values.webserver.webserverConfig | nindent 4 }}
+{{- end }}
