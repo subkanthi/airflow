@@ -19,15 +19,23 @@
 from io import TextIOWrapper
 from typing import Any, Optional, Sequence, Union
 
-from googleapiclient.discovery import Resource, build
-from googleapiclient.http import HttpRequest, MediaFileUpload
+from googleapiclient.discovery import build
 
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 
 
 class GoogleCalendarHook(GoogleBaseHook):
 
-    def __init__(self, api_version: str = "v3"):
+    def __init__(self, api_version: str = "v3",
+                 gcp_conn_id: str = "google_cloud_default",
+                 delegate_to: Optional[str] = None,
+                 impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
+                 ) -> None:
+        super().__init__(
+            gcp_conn_id=gcp_conn_id,
+            delegate_to=delegate_to,
+            impersonation_chain=impersonation_chain,
+        )
         self.api_version = api_version
 
     def get_conn(self) -> Any:
@@ -41,16 +49,30 @@ class GoogleCalendarHook(GoogleBaseHook):
             self._conn = build("calendar", self.api_version, http=http_authorized, cache_discovery=False)
         return self._conn
 
-    def get_calendar_entries(self, date, number_entries):
+    def get_calendar_entries(self, event_id, calendar_id='primary'):
         """
         Retrieves the calendar entries from the date provided.
 
         :return; List of calendar entries
         """
+        event = self.get_conn().events().get(calendarId=calendar_id, eventId=event_id).execute()
+        self.log.info("Retrieved event summary %s", event['summary'])
+        return event
 
-    def create_event(self, data):
+    def insert_event(self, data, calendar_id='primary'):
         """
         Creates a calendar event from the json.
         """
-        event = self.get_conn().events().insert(calendarId='primary', body=data).execute()
+        event = self.get_conn().events().insert(calendarId=calendar_id, body=data).execute()
         self.log.info("Created event %s", event["htmlLink"])
+        return event
+
+    def import_event(self, data, calendar_id='primary'):
+        """
+        Import a calendar event from the calendar.
+        """
+        event = self.get_conn().events().import_(calendarId=calendar_id, body=data).execute()
+        self.log.info("Imported event %s", event['id'])
+        return event
+
+
