@@ -19,12 +19,43 @@
 Changelog
 ---------
 
+1.3.0
+.....
+
+Features
+~~~~~~~~
+
+* ``A bunch of template_fields_renderers additions (#15130)``
+* ``Send region_name into parent class of AwsGlueJobHook (#14251)``
+* ``Added retry to ECS Operator (#14263)``
+* ``Make script_args templated in AwsGlueJobOperator (#14925)``
+* ``Add FTPToS3Operator (#13707)``
+* ``Implemented S3 Bucket Tagging (#14402)``
+* ``S3DataSource is not required (#14220)``
+
+Bug fixes
+~~~~~~~~~
+
+* ``AWS: Do not log info when SSM & SecretsManager secret not found (#15120)``
+* ``Cache Hook when initializing 'CloudFormationCreateStackSensor' (#14638)``
+
+1.2.0
+.....
+
+Features
+~~~~~~~~
+
+* ``Avoid using threads in S3 remote logging upload (#14414)``
+* ``Allow AWS Operator RedshiftToS3Transfer To Run a Custom Query (#14177)``
+* ``includes the STS token if STS credentials are used (#11227)``
+
 1.1.0
 .....
 
 Features
 ~~~~~~~~
 
+* ``Adding support to put extra arguments for Glue Job. (#14027)``
 * ``Add aws ses email backend for use with EmailOperator. (#13986)``
 * ``Add bucket_name to template fileds in S3 operators (#13973)``
 * ``Add ExasolToS3Operator (#13847)``

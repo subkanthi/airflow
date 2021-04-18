@@ -19,6 +19,48 @@
 Changelog
 ---------
 
+2.2.0
+.....
+
+Features
+~~~~~~~~
+
+* ``Adds 'Trino' provider (with lower memory footprint for tests) (#15187)``
+* ``update remaining old import paths of operators (#15127)``
+* ``Override project in dataprocSubmitJobOperator (#14981)``
+* ``GCS to BigQuery Transfer Operator with Labels and Description parameter (#14881)``
+* ``Add GCS timespan transform operator (#13996)``
+* ``Add job labels to bigquery check operators. (#14685)``
+* ``Use libyaml C library when available. (#14577)``
+* ``Add Google leveldb hook and operator (#13109) (#14105)``
+
+Bug fixes
+~~~~~~~~~
+
+* ``Google Dataflow Hook to handle no Job Type (#14914)``
+
+2.1.0
+.....
+
+Features
+~~~~~~~~
+
+* ``Corrects order of argument in docstring in GCSHook.download method (#14497)``
+* ``Refactor SQL/BigQuery/Qubole/Druid Check operators (#12677)``
+* ``Add GoogleDriveToLocalOperator (#14191)``
+* ``Add 'exists_ok' flag to BigQueryCreateEmptyTable(Dataset)Operator (#14026)``
+* ``Add materialized view support for BigQuery (#14201)``
+* ``Add BigQueryUpdateTableOperator (#14149)``
+* ``Add param to CloudDataTransferServiceOperator (#14118)``
+* ``Add gdrive_to_gcs operator, drive sensor, additional functionality to drive hook  (#13982)``
+* ``Improve GCSToSFTPOperator paths handling (#11284)``
+
+Bug Fixes
+~~~~~~~~~
+
+* ``Fixes to dataproc operators and hook (#14086)``
+* ``#9803 fix bug in copy operation without wildcard  (#13919)``
+
 2.0.0
 .....
 

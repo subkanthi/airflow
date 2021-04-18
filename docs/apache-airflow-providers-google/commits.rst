@@ -25,6 +25,7 @@ Google services including:
   - `Google Ads <https://ads.google.com/>`__
   - `Google Cloud (GCP) <https://cloud.google.com/>`__
   - `Google Firebase <https://firebase.google.com/>`__
+  - `Google LevelDB <https://github.com/google/leveldb/>`__
   - `Google Marketing Platform <https://marketingplatform.google.com/>`__
   - `Google Workspace <https://workspace.google.pl/>`__ (formerly Google Suite)
 
@@ -34,14 +35,70 @@ For high-level changelog, see :doc:`package information including changelog <ind
 
 
 
+2.2.0
+.....
+
+Latest change: 2021-04-06
+
+================================================================================================  ===========  ====================================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  ====================================================================================
+`042be2e4e <https://github.com/apache/airflow/commit/042be2e4e06b988f5ba2dc146f53774dabc8b76b>`_  2021-04-06   ``Updated documentation for provider packages before April release (#15236)``
+`eae22cec9 <https://github.com/apache/airflow/commit/eae22cec9c87e8dad4d6e8599e45af1bdd452062>`_  2021-04-06   ``Adds 'Trino' provider (with lower memory footprint for tests) (#15187)``
+`e49722859 <https://github.com/apache/airflow/commit/e49722859b81cfcdd7e4bb8e8aba4efb049a8590>`_  2021-04-05   ``Updates 3.6 limits for latest versions of a few libraries (#15209)``
+`1d641d8f1 <https://github.com/apache/airflow/commit/1d641d8f114660eee18c6246081cfe991bb74baa>`_  2021-04-01   ``update remaining old import paths of operators (#15127)``
+`099c490cf <https://github.com/apache/airflow/commit/099c490cffae9556e56e141addcb41e9676e0d8f>`_  2021-03-28   ``Override project in dataprocSubmitJobOperator (#14981)``
+`537969889 <https://github.com/apache/airflow/commit/53796988929d7b5de98cd322fdea9e0a8edec0a1>`_  2021-03-27   ``Improve docstrings for various modules (#15047)``
+`a7ca1b3b0 <https://github.com/apache/airflow/commit/a7ca1b3b0bdf0b7677e53be1b11e833714dfbbb4>`_  2021-03-26   ``Fix Sphinx Issues with Docstrings (#14968)``
+`a7e144bec <https://github.com/apache/airflow/commit/a7e144bec855f6ccf0fa5ae8447894195ffe170f>`_  2021-03-23   ``Google Dataflow Hook to handle no Job Type (#14914)``
+`72ea841b4 <https://github.com/apache/airflow/commit/72ea841b4bb439495b0f58e043774d38f701100e>`_  2021-03-22   ``GCS to BigQuery Transfer Operator with Labels and Description parameter (#14881)``
+`e172bd0e1 <https://github.com/apache/airflow/commit/e172bd0e16d5b13105734fe9eb8effc44d593c29>`_  2021-03-22   ``Update docstrings to adhere to sphinx standards (#14918)``
+`68e4c4dcb <https://github.com/apache/airflow/commit/68e4c4dcb0416eb51a7011a3bb040f1e23d7bba8>`_  2021-03-20   ``Remove Backport Providers (#14886)``
+`ddc9133d3 <https://github.com/apache/airflow/commit/ddc9133d36f88dbecd260a4f28ac2dec39395edf>`_  2021-03-15   ``Add GCS timespan transform operator (#13996)``
+`943baff67 <https://github.com/apache/airflow/commit/943baff6701f9f8591090bf76219571d7f5e2cc5>`_  2021-03-10   ``Add job labels to bigquery check operators. (#14685)``
+`6dc24c95e <https://github.com/apache/airflow/commit/6dc24c95e3bb46ac42fc80b1948aa79ae6c6fbd1>`_  2021-03-07   ``Fix grammar and remove duplicate words (#14647)``
+`e7bb17aeb <https://github.com/apache/airflow/commit/e7bb17aeb83b2218620c5320241b0c9f902d74ff>`_  2021-03-06   ``Use built-in 'cached_property' on Python 3.8 where possible (#14606)``
+`7daebefd1 <https://github.com/apache/airflow/commit/7daebefd15355b3f1331c6c58f66f3f88d38a10a>`_  2021-03-05   ``Use libyaml C library when available. (#14577)``
+`35c9a9029 <https://github.com/apache/airflow/commit/35c9a902929b79cf7cf53ac5b90c3565dddb97dc>`_  2021-03-01   ``Add Google leveldb hook and operator (#13109) (#14105)``
+================================================================================================  ===========  ====================================================================================
+
+2.1.0
+.....
+
+Latest change: 2021-02-27
+
+================================================================================================  ===========  ===============================================================================================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  ===============================================================================================================================================
+`589d6dec9 <https://github.com/apache/airflow/commit/589d6dec922565897785bcbc5ac6bb3b973d7f5d>`_  2021-02-27   ``Prepare to release the next wave of providers: (#14487)``
+`50a1504c5 <https://github.com/apache/airflow/commit/50a1504c524257e53eff06589b71973cfab5bf54>`_  2021-02-27   ``Fix spellings (#14483)``
+`bfef559cf <https://github.com/apache/airflow/commit/bfef559cf6138eec3ac77c64289fb1d45133d8be>`_  2021-02-27   ``Corrects order of argument in docstring in GCSHook.download method (#14497)``
+`33214d932 <https://github.com/apache/airflow/commit/33214d9326bb0bb52f06e230895f4f68fc952664>`_  2021-02-26   ``Refactor SQL/BigQuery/Qubole/Druid Check operators (#12677)``
+`c28197998 <https://github.com/apache/airflow/commit/c281979982c36f16c4c346c996a0c8d6ca7c630d>`_  2021-02-23   ``Documentation and example dag for CloudDLPDeidentifyContentOperator, GCSObjectExistenceSensor, GCSObjectsWithPrefixExistenceSensor (#14033)``
+`ca35bd7f7 <https://github.com/apache/airflow/commit/ca35bd7f7f6bc2fb4f2afd7762114ce262c61941>`_  2021-02-21   ``By default PIP will install all packages in .local folder (#14125)``
+`a7e4266d6 <https://github.com/apache/airflow/commit/a7e4266d675d5283cdd34c6451c8ef0f2858a501>`_  2021-02-21   ``Refactor GoogleDriveToGCSOperator to use common methods (#14276)``
+`1ab406663 <https://github.com/apache/airflow/commit/1ab406663ead7475ac14644553ac48466777bd78>`_  2021-02-16   ``Add GoogleDriveToLocalOperator (#14191)``
+`59c94c679 <https://github.com/apache/airflow/commit/59c94c679e996ab7a75b4feeb1755353f60d030f>`_  2021-02-13   ``Add 'exists_ok' flag to BigQueryCreateEmptyTable(Dataset)Operator (#14026)``
+`e31b27d59 <https://github.com/apache/airflow/commit/e31b27d593f7379f38ced34b6e4ce8947b91fcb8>`_  2021-02-13   ``Add materialized view support for BigQuery (#14201)``
+`e3bcaa3ba <https://github.com/apache/airflow/commit/e3bcaa3ba351234effe52ad380345c4e39003fcb>`_  2021-02-12   ``Correct typo in GCSObjectsWtihPrefixExistenceSensor  (#14179)``
+`7faa2d978 <https://github.com/apache/airflow/commit/7faa2d978c3a4e1eb2f7c6a931c9475712015f9f>`_  2021-02-10   ``Add BigQueryUpdateTableOperator (#14149)``
+`1da697216 <https://github.com/apache/airflow/commit/1da69721651455c9108c00ca5f6723d6557524a9>`_  2021-02-10   ``Fixes to dataproc operators and hook (#14086)``
+`02288cf2b <https://github.com/apache/airflow/commit/02288cf2baf590e448cd008f6216ccf8b776a67a>`_  2021-02-10   ``Add param to CloudDataTransferServiceOperator (#14118)``
+`7d3864547 <https://github.com/apache/airflow/commit/7d38645472b0502212504b09d85b0e1271d74274>`_  2021-02-09   ``#9803 fix bug in copy operation without wildcard  (#13919)``
+`b0c382426 <https://github.com/apache/airflow/commit/b0c382426c943cbf7bd7c09583d9c5d3137413ee>`_  2021-02-07   ``Add gdrive_to_gcs operator, drive sensor, additional functionality to drive hook, and supporting tests (#13982)``
+`5d7d46bb3 <https://github.com/apache/airflow/commit/5d7d46bb33c1d529c1549b593ee27bbc7f56ea29>`_  2021-02-05   ``Improve GCSToSFTPOperator paths handling (#11284)``
+`10343ec29 <https://github.com/apache/airflow/commit/10343ec29f8f0abc5b932ba26faf49bc63c6bcda>`_  2021-02-05   ``Corrections in docs and tools after releasing provider RCs (#14082)``
+================================================================================================  ===========  ===============================================================================================================================================
+
 2.0.0
 .....
 
-Latest change: 2021-02-03
+Latest change: 2021-02-04
 
 ================================================================================================  ===========  =========================================================================================
 Commit                                                                                            Committed    Subject
 ================================================================================================  ===========  =========================================================================================
+`88bdcfa0d <https://github.com/apache/airflow/commit/88bdcfa0df5bcb4c489486e05826544b428c8f43>`_  2021-02-04   ``Prepare to release a new wave of providers. (#14013)``
 `1872d8719 <https://github.com/apache/airflow/commit/1872d8719d24f94aeb1dcba9694837070b9884ca>`_  2021-02-03   ``Add Apache Beam operators (#12814)``
 `0e8c77b93 <https://github.com/apache/airflow/commit/0e8c77b93a5ca5ecfdcd1c4bd91f54846fc15d57>`_  2021-02-03   ``Support google-cloud-logging' >=2.0.0 (#13801)``
 `833e33832 <https://github.com/apache/airflow/commit/833e3383230e1f6f73f8022ddf439d3d531eff01>`_  2021-02-02   ``Fix four bugs in StackdriverTaskHandler (#13784)``

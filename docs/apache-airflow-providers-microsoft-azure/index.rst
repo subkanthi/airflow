@@ -26,7 +26,7 @@ Content
     :maxdepth: 1
     :caption: Guides
 
-    Connection types <connections/azure>
+    Connection types <connections/index>
     Operators <operators/index>
     Secrets backends <secrets-backends/azure-key-vault>
     Logging for Tasks <logging>
@@ -60,7 +60,7 @@ Package apache-airflow-providers-microsoft-azure
 `Microsoft Azure <https://azure.microsoft.com/>`__
 
 
-Release: 1.1.0
+Release: 1.3.0
 
 Provider package
 ----------------
@@ -96,8 +96,11 @@ PIP package                       Version required
 ``azure-keyvault``                ``>=4.1.0``
 ``azure-kusto-data``              ``>=0.0.43,<0.1``
 ``azure-mgmt-containerinstance``  ``>=1.5.0,<2.0``
+``azure-mgmt-datafactory``        ``>=1.0.0,<2.0``
 ``azure-mgmt-datalake-store``     ``>=0.5.0``
 ``azure-mgmt-resource``           ``>=2.2.0``
+``azure-storage-blob``            ``>=12.7.0``
+``azure-storage-common``          ``>=2.1.0``
 ``azure-storage-file``            ``>=2.1.0``
 ================================  ==================
 
@@ -105,7 +108,7 @@ Cross provider package dependencies
 -----------------------------------
 
 Those are dependencies that might be needed in order to use all the features of the package.
-You need to install the specified backport providers package in order to use them.
+You need to install the specified provider packages in order to use them.
 
 You can install such cross-provider dependencies when installing from PyPI. For example:
 
@@ -141,6 +144,33 @@ Dependent package                                                               
 
 Changelog
 ---------
+
+1.3.0
+.....
+
+Features
+~~~~~~~~
+
+* ``A bunch of template_fields_renderers additions (#15130)``
+
+Bug fixes
+~~~~~~~~~
+
+* ``Fix attributes for AzureDataFactory hook (#14704)``
+
+1.2.0
+.....
+
+Features
+~~~~~~~~
+
+* ``Add Azure Data Factory hook (#11015)``
+
+Bug fixes
+~~~~~~~~~
+
+* ``BugFix: Fix remote log in azure storage blob displays in one line (#14313)``
+* ``Fix AzureDataFactoryHook failing to instantiate its connection (#14565)``
 
 1.1.0
 .....

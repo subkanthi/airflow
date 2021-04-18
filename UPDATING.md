@@ -27,8 +27,10 @@ assists users migrating to a new version.
 **Table of contents**
 
 - [Master](#master)
+- [Airflow 2.0.2](#airflow-202)
 - [Airflow 2.0.1](#airflow-201)
 - [Airflow 2.0.0](#airflow-200)
+- [Airflow 1.10.15](#airflow-11015)
 - [Airflow 1.10.14](#airflow-11014)
 - [Airflow 1.10.13](#airflow-11013)
 - [Airflow 1.10.12](#airflow-11012)
@@ -69,6 +71,32 @@ https://developers.google.com/style/inclusive-documentation
 
 -->
 
+### Removed pod_launcher from core airflow
+
+Moved the pod launcher from `airflow.kubernetes.pod_launcher` to `airflow.providers.cncf.kubernetes.utils.pod_launcher`
+
+This will allow users to update the pod_launcher for the KubernetesPodOperator without requiring an airflow upgrade
+
+### Default `[webserver] worker_refresh_interval` is changed to `6000` seconds
+
+The default value for `[webserver] worker_refresh_interval` was `30` seconds for
+Airflow <=2.0.1. However, since Airflow 2.0 DAG Serialization is a hard requirement
+and the Webserver used the serialized DAGs, there is no need to kill an existing
+worker and create a new one as frequently as `30` seconds.
+
+This setting can be raised to an even higher value, currently it is
+set to `6000` seconds (10 minutes) to
+serve as a DagBag cache burst time.
+
+### `default_queue` configuration has been moved to the `operators` section.
+
+The `default_queue` configuration option has been moved from `[celery]` section to `[operators]` section to allow for re-use between different executors.
+
+## Airflow 2.0.2
+
+### Default `[kubernetes] enable_tcp_keepalive` is changed to `True`
+
+This allows Airflow to work more reliably with some environments (like Azure) by default.
 
 ## Airflow 2.0.1
 
@@ -208,7 +236,7 @@ from my_plugin import MyOperator
 
 The name under `airflow.operators.` was the plugin name, where as in the second example it is the python module name where the operator is defined.
 
-See https://airflow.apache.org/docs/stable/howto/custom-operator.html for more info.
+See https://airflow.apache.org/docs/apache-airflow/stable/howto/custom-operator.html for more info.
 
 ### Importing Hooks via plugins is no longer supported
 
@@ -226,7 +254,7 @@ from my_plugin import MyHook
 
 It is still possible (but not required) to "register" hooks in plugins. This is to allow future support for dynamically populating the Connections form in the UI.
 
-See https://airflow.apache.org/docs/stable/howto/custom-operator.html for more info.
+See https://airflow.apache.org/docs/apache-airflow/stable/howto/custom-operator.html for more info.
 
 ### Adding Operators and Sensors via plugins is no longer supported
 
@@ -329,7 +357,7 @@ The `conn_type` column in the `connection` table must contain content. Previousl
 by application logic, but was not enforced by the database schema.
 
 If you made any modifications to the table directly, make sure you don't have
-null in the conn_type column.
+null in the `conn_type` column.
 
 ### Configuration changes
 
@@ -416,6 +444,35 @@ executor = my_acme_company.executors.MyCustomExecutor
 ```
 
 The old configuration is still works but can be abandoned at any time.
+
+#### Use `CustomSQLAInterface` instead of `SQLAInterface` for custom data models.
+
+From Airflow 2.0, if you want to define your own Flask App Builder data models you need to use CustomSQLAInterface
+instead of SQLAInterface.
+
+For Non-RBAC replace:
+
+```python
+from flask_appbuilder.models.sqla.interface import SQLAInterface
+
+datamodel = SQLAInterface(your_data_model)
+```
+
+with RBAC (in 1.10):
+
+```python
+from airflow.www_rbac.utils import CustomSQLAInterface
+
+datamodel = CustomSQLAInterface(your_data_model)
+```
+
+and in 2.0:
+
+```python
+from airflow.www.utils import CustomSQLAInterface
+
+datamodel = CustomSQLAInterface(your_data_model)
+```
 
 #### Drop plugin support for stat_name_handler
 
@@ -595,7 +652,7 @@ User can preserve/achieve the original behaviour by setting the trigger_rule of 
 
 #### Remove SQL support in BaseHook
 
-Remove ``get_records`` and ``get_pandas_df`` and ``run`` from BaseHook, which only apply for sql like hook,
+Remove ``get_records`` and ``get_pandas_df`` and ``run`` from BaseHook, which only apply for SQL-like hook,
 If want to use them, or your custom hook inherit them, please use ``airflow.hooks.dbapi.DbApiHook``
 
 #### Assigning task to a DAG using bitwise shift (bit-shift) operators are no longer supported
@@ -656,7 +713,7 @@ implicit dependency to BaseOperator. That can often lead to cyclic dependencies.
 
 More information in [AIRFLOW-6392](https://issues.apache.org/jira/browse/AIRFLOW-6392)
 
-In Airflow <2.0 you imported those two methods like this:
+In Airflow < 2.0 you imported those two methods like this:
 
 ```python
 from airflow.utils.helpers import chain
@@ -780,7 +837,7 @@ In previous versions, the `LatestOnlyOperator` forcefully skipped all (direct an
 
 No change is needed if only the default trigger rule `all_success` is being used.
 
-If the DAG relies on tasks with other trigger rules (i.e. `all_done`) being skipped by the `LatestOnlyOperator`, adjustments to the DAG need to be made to commodate the change in behaviour, i.e. with additional edges from the `LatestOnlyOperator`.
+If the DAG relies on tasks with other trigger rules (i.e. `all_done`) being skipped by the `LatestOnlyOperator`, adjustments to the DAG need to be made to accommodate the change in behaviour, i.e. with additional edges from the `LatestOnlyOperator`.
 
 The goal of this change is to achieve a more consistent and configurale cascading behaviour based on the `BaseBranchOperator` (see [AIRFLOW-2923](https://jira.apache.org/jira/browse/AIRFLOW-2923) and [AIRFLOW-1784](https://jira.apache.org/jira/browse/AIRFLOW-1784)).
 
@@ -1662,7 +1719,7 @@ ImapHook:
 #### `airflow.providers.http.hooks.http.HttpHook`
 
 The HTTPHook is now secured by default: `verify=True` (before: `verify=False`)
-This can be overwriten by using the extra_options param as `{'verify': False}`.
+This can be overwritten by using the extra_options param as `{'verify': False}`.
 
 #### `airflow.providers.cloudant.hooks.cloudant.CloudantHook`
 
@@ -1791,6 +1848,10 @@ Now the `dag_id` will not appear repeated in the payload, and the response forma
 ...
 }
 ```
+
+## Airflow 1.10.15
+
+No breaking changes.
 
 ## Airflow 1.10.14
 
@@ -2201,7 +2262,7 @@ It is no longer required to set one of the environment variables to avoid
 a GPL dependency. Airflow will now always use text-unidecode if unidecode
 was not installed before.
 
-### new `sync_parallelism` config option in celery section
+### New `sync_parallelism` config option in `[celery]` section
 
 The new `sync_parallelism` config option will control how many processes CeleryExecutor will use to
 fetch celery task state in parallel. Default value is max(1, number of cores - 1)
@@ -2401,7 +2462,7 @@ next_ds/prev_ds now map to execution_date instead of the next/previous schedule-
 
 ### User model changes
 
-This patch changes the `User.superuser` field from a hardcoded boolean to a `Boolean()` database column. `User.superuser` will default to `False`, which means that this privilege will have to be granted manually to any users that may require it.
+This patch changes the `User.superuser` field from a hard-coded boolean to a `Boolean()` database column. `User.superuser` will default to `False`, which means that this privilege will have to be granted manually to any users that may require it.
 
 For example, open a Python shell and
 

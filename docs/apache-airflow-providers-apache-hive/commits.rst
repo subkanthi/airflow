@@ -28,14 +28,44 @@ For high-level changelog, see :doc:`package information including changelog <ind
 
 
 
+1.0.3
+.....
+
+Latest change: 2021-04-06
+
+================================================================================================  ===========  =============================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  =============================================================================
+`042be2e4e <https://github.com/apache/airflow/commit/042be2e4e06b988f5ba2dc146f53774dabc8b76b>`_  2021-04-06   ``Updated documentation for provider packages before April release (#15236)``
+`53dafa593 <https://github.com/apache/airflow/commit/53dafa593fd7ce0be2a48dc9a9e993bb42b6abc5>`_  2021-04-04   ``Fix mistake and typos in doc/docstrings (#15180)``
+`85e0e7607 <https://github.com/apache/airflow/commit/85e0e76074ced7af258fa476a321865208c33375>`_  2021-03-29   ``Pin flynt to fix failing PRs (#15076)``
+`68e4c4dcb <https://github.com/apache/airflow/commit/68e4c4dcb0416eb51a7011a3bb040f1e23d7bba8>`_  2021-03-20   ``Remove Backport Providers (#14886)``
+`6dc24c95e <https://github.com/apache/airflow/commit/6dc24c95e3bb46ac42fc80b1948aa79ae6c6fbd1>`_  2021-03-07   ``Fix grammar and remove duplicate words (#14647)``
+`b0d6069d2 <https://github.com/apache/airflow/commit/b0d6069d25cf482309af40eec068bcccb2b62552>`_  2021-03-05   ``Fix broken static check on Master  (#14633)``
+`d9e4454c6 <https://github.com/apache/airflow/commit/d9e4454c66051a9e8bb5b2f3814d46f29332b89d>`_  2021-03-01   ``Resolve issue related to HiveCliHook kill (#14542)``
+================================================================================================  ===========  =============================================================================
+
+1.0.2
+.....
+
+Latest change: 2021-02-27
+
+================================================================================================  ===========  =======================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  =======================================================================
+`589d6dec9 <https://github.com/apache/airflow/commit/589d6dec922565897785bcbc5ac6bb3b973d7f5d>`_  2021-02-27   ``Prepare to release the next wave of providers: (#14487)``
+`10343ec29 <https://github.com/apache/airflow/commit/10343ec29f8f0abc5b932ba26faf49bc63c6bcda>`_  2021-02-05   ``Corrections in docs and tools after releasing provider RCs (#14082)``
+================================================================================================  ===========  =======================================================================
+
 1.0.1
 .....
 
-Latest change: 2021-02-01
+Latest change: 2021-02-04
 
 ================================================================================================  ===========  ===========================================================================
 Commit                                                                                            Committed    Subject
 ================================================================================================  ===========  ===========================================================================
+`88bdcfa0d <https://github.com/apache/airflow/commit/88bdcfa0df5bcb4c489486e05826544b428c8f43>`_  2021-02-04   ``Prepare to release a new wave of providers. (#14013)``
 `ac2f72c98 <https://github.com/apache/airflow/commit/ac2f72c98dc0821b33721054588adbf2bb53bb0b>`_  2021-02-01   ``Implement provider versioning tools (#13767)``
 `a9ac2b040 <https://github.com/apache/airflow/commit/a9ac2b040b64de1aa5d9c2b9def33334e36a8d22>`_  2021-01-23   ``Switch to f-strings using flynt. (#13732)``
 `5f81fc73c <https://github.com/apache/airflow/commit/5f81fc73c8ea3fc1c3b08080f439fa123926f250>`_  2021-01-03   ``Fix: Remove password if in LDAP or CUSTOM mode HiveServer2Hook (#11767)``

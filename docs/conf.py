@@ -39,6 +39,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+try:
+    from yaml import CSafeLoader as SafeLoader
+except ImportError:
+    from yaml import SafeLoader  # type: ignore[misc]
+
 import airflow
 from airflow.configuration import AirflowConfigParser, default_config_yaml
 from docs.exts.docs_build.third_party_inventories import (  # pylint: disable=no-name-in-module,wrong-import-order
@@ -71,10 +76,10 @@ elif PACKAGE_NAME.startswith('apache-airflow-providers-'):
     except StopIteration:
         raise Exception(f"Could not find provider.yaml file for package: {PACKAGE_NAME}")
     PACKAGE_DIR = CURRENT_PROVIDER['package-dir']
-    PACKAGE_VERSION = 'master'
+    PACKAGE_VERSION = 'devel'
 else:
     PACKAGE_DIR = None
-    PACKAGE_VERSION = 'master'
+    PACKAGE_VERSION = 'devel'
 # Adds to environment variables for easy access from other plugins like airflow_intersphinx.
 os.environ['AIRFLOW_PACKAGE_NAME'] = PACKAGE_NAME
 if PACKAGE_DIR:
@@ -140,6 +145,9 @@ if PACKAGE_NAME == "apache-airflow-providers":
             'providers_packages_ref',
         ]
     )
+elif PACKAGE_NAME in ("helm-chart", "docker-stack"):
+    # No extra extensions
+    pass
 else:
     extensions.append('autoapi.extension')
 # List of patterns, relative to source directory, that match files and
@@ -295,8 +303,8 @@ html_context = {
     'conf_py_path': f'/docs/{PACKAGE_NAME}/',
     'github_user': 'apache',
     'github_repo': 'airflow',
-    'github_version': 'master',
-    'display_github': 'master',
+    'github_version': 'devel',
+    'display_github': 'devel',
     'suffix': '.rst',
 }
 
@@ -332,7 +340,7 @@ elif PACKAGE_NAME.startswith('apache-airflow-providers-'):
             return {}
 
         with open(file_path) as config_file:
-            return yaml.safe_load(config_file)
+            return yaml.load(config_file, SafeLoader)
 
     config = _load_config()
     if config:
@@ -496,7 +504,7 @@ autoapi_keep_files = True
 
 # Relative path to output the AutoAPI files into. This can also be used to place the generated documentation
 # anywhere in your documentation hierarchy.
-autoapi_root = f'{PACKAGE_NAME}/_api'
+autoapi_root = '_api'
 
 # Whether to insert the generated documentation into the TOC tree. If this is False, the default AutoAPI
 # index page is not generated and you will need to include the generated documentation in a
@@ -531,4 +539,4 @@ if PACKAGE_NAME == 'apache-airflow':
     ]
 
     # Options for script updater
-    redoc_script_url = "https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.30/bundles/redoc.standalone.js"
+    redoc_script_url = "https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.48/bundles/redoc.standalone.js"

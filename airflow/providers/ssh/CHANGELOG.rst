@@ -19,6 +19,22 @@
 Changelog
 ---------
 
+1.3.0
+.....
+
+Features
+~~~~~~~~
+
+* ``A bunch of template_fields_renderers additions (#15130)``
+
+1.2.0
+.....
+
+Features
+~~~~~~~~
+
+* ``Added support for DSS, ECDSA, and Ed25519 private keys in SSHHook (#12467)``
+
 1.1.0
 .....
 

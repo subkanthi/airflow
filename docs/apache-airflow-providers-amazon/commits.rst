@@ -28,14 +28,61 @@ For high-level changelog, see :doc:`package information including changelog <ind
 
 
 
+1.3.0
+.....
+
+Latest change: 2021-04-06
+
+================================================================================================  ===========  =============================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  =============================================================================
+`042be2e4e <https://github.com/apache/airflow/commit/042be2e4e06b988f5ba2dc146f53774dabc8b76b>`_  2021-04-06   ``Updated documentation for provider packages before April release (#15236)``
+`266384a63 <https://github.com/apache/airflow/commit/266384a63f4693b667f308d49fcbed9a10a41fce>`_  2021-04-05   ``Fix string concatenation using 'f-strings' (#15200)``
+`eda538f56 <https://github.com/apache/airflow/commit/eda538f56cb2dc2728d303acddb42841fe419c36>`_  2021-04-02   ``AWS: Do not log info when SSM & SecretsManager secret not found (#15120)``
+`9b76b94c9 <https://github.com/apache/airflow/commit/9b76b94c940d472290861930a1d5860b43b3b2b2>`_  2021-04-02   ``A bunch of template_fields_renderers additions (#15130)``
+`682266510 <https://github.com/apache/airflow/commit/6822665102c973d6e4d5892564294489ca094580>`_  2021-04-01   ``Send region_name into parant class of AwsGlueJobHook (#14251)``
+`537969889 <https://github.com/apache/airflow/commit/53796988929d7b5de98cd322fdea9e0a8edec0a1>`_  2021-03-27   ``Improve docstrings for various modules (#15047)``
+`614be87b2 <https://github.com/apache/airflow/commit/614be87b23199acd67e69677cfdb6ae4ed023b69>`_  2021-03-26   ``Added retry to ECS Operator (#14263)``
+`a7ca1b3b0 <https://github.com/apache/airflow/commit/a7ca1b3b0bdf0b7677e53be1b11e833714dfbbb4>`_  2021-03-26   ``Fix Sphinx Issues with Docstrings (#14968)``
+`0f327788b <https://github.com/apache/airflow/commit/0f327788b5b0887c463cb83dd8f732245da96577>`_  2021-03-24   ``doc: Fix typo in 'secrets_manager.py' docstring (#14943)``
+`93982e3bb <https://github.com/apache/airflow/commit/93982e3bb6386e3db02bd5e4a8e61f74bdc12d94>`_  2021-03-22   ``Make script_args templated in AwsGlueJobOperator (#14925)``
+`e172bd0e1 <https://github.com/apache/airflow/commit/e172bd0e16d5b13105734fe9eb8effc44d593c29>`_  2021-03-22   ``Update docstrings to adhere to sphinx standards (#14918)``
+`68e4c4dcb <https://github.com/apache/airflow/commit/68e4c4dcb0416eb51a7011a3bb040f1e23d7bba8>`_  2021-03-20   ``Remove Backport Providers (#14886)``
+`a3778127e <https://github.com/apache/airflow/commit/a3778127ed98c131e1465125de672f202961b3c5>`_  2021-03-15   ``Add FTPToS3Operator (#13707)``
+`b896aee8c <https://github.com/apache/airflow/commit/b896aee8cca6fe678e96e0eadf39ce956f9525fc>`_  2021-03-07   ``Cache Hook when initializing 'CloudFormationCreateStackSensor' (#14638)``
+`e7bb17aeb <https://github.com/apache/airflow/commit/e7bb17aeb83b2218620c5320241b0c9f902d74ff>`_  2021-03-06   ``Use built-in 'cached_property' on Python 3.8 where possible (#14606)``
+`697abf399 <https://github.com/apache/airflow/commit/697abf399de107eb4bafb730acf23d868e107a08>`_  2021-03-05   ``S3DataSource is not required (#14220)``
+`8ced652ec <https://github.com/apache/airflow/commit/8ced652ecf847ed668e5eed27e3e47a51a27b1c8>`_  2021-02-28   ``Implemented S3 Bucket Tagging (#14402)``
+================================================================================================  ===========  =============================================================================
+
+1.2.0
+.....
+
+Latest change: 2021-02-27
+
+================================================================================================  ===========  ==========================================================================
+Commit                                                                                            Committed    Subject
+================================================================================================  ===========  ==========================================================================
+`589d6dec9 <https://github.com/apache/airflow/commit/589d6dec922565897785bcbc5ac6bb3b973d7f5d>`_  2021-02-27   ``Prepare to release the next wave of providers: (#14487)``
+`13854c32a <https://github.com/apache/airflow/commit/13854c32a38787af6d8a52ab2465cb6185c0b74c>`_  2021-02-27   ``Adding support to put extra arguments for Glue Job. (#14027)``
+`0d6cae417 <https://github.com/apache/airflow/commit/0d6cae4172ff185ec4c0fc483bf556ce3252b7b0>`_  2021-02-24   ``Avoid using threads in S3 remote logging uplod (#14414)``
+`ca35bd7f7 <https://github.com/apache/airflow/commit/ca35bd7f7f6bc2fb4f2afd7762114ce262c61941>`_  2021-02-21   ``By default PIP will install all packages in .local folder (#14125)``
+`1b1472630 <https://github.com/apache/airflow/commit/1b147263076d48772d417c5154f2db86fc6a6877>`_  2021-02-11   ``Allow AWS Operator RedshiftToS3Transfer To Run a Custom Query (#14177)``
+`9034f277e <https://github.com/apache/airflow/commit/9034f277ef935df98b63963c824ba71e0dcd92c7>`_  2021-02-10   ``Document configuration for email backend credentials. (#14006)``
+`8c5594b02 <https://github.com/apache/airflow/commit/8c5594b02ffbfc631ebc2366dbde6d8c4e56d550>`_  2021-02-08   ``includes the STS token if STS credentials are used (#11227)``
+`cddbf9c11 <https://github.com/apache/airflow/commit/cddbf9c11d092422e6695d7a5a5c859fdf140753>`_  2021-02-06   ``Use MongoDB color for MongoToS3Operator (#14103)``
+`10343ec29 <https://github.com/apache/airflow/commit/10343ec29f8f0abc5b932ba26faf49bc63c6bcda>`_  2021-02-05   ``Corrections in docs and tools after releasing provider RCs (#14082)``
+================================================================================================  ===========  ==========================================================================
+
 1.1.0
 .....
 
-Latest change: 2021-02-01
+Latest change: 2021-02-04
 
 ================================================================================================  ===========  =========================================================================================
 Commit                                                                                            Committed    Subject
 ================================================================================================  ===========  =========================================================================================
+`88bdcfa0d <https://github.com/apache/airflow/commit/88bdcfa0df5bcb4c489486e05826544b428c8f43>`_  2021-02-04   ``Prepare to release a new wave of providers. (#14013)``
 `ac2f72c98 <https://github.com/apache/airflow/commit/ac2f72c98dc0821b33721054588adbf2bb53bb0b>`_  2021-02-01   ``Implement provider versioning tools (#13767)``
 `01049ddce <https://github.com/apache/airflow/commit/01049ddce210f475d6eae9b1cb306f750a1d6dd8>`_  2021-01-31   ``Add aws ses email backend for use with EmailOperator. (#13986)``
 `ecfdc60bb <https://github.com/apache/airflow/commit/ecfdc60bb607fe0d13fa7e315476c607813abab6>`_  2021-01-29   ``Add bucket_name to template fileds in S3 operators (#13973)``

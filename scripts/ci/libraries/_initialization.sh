@@ -148,6 +148,9 @@ function initialization::initialize_base_variables() {
     # If no Airflow Home defined - fallback to ${HOME}/airflow
     AIRFLOW_HOME_DIR=${AIRFLOW_HOME:=${HOME}/airflow}
     export AIRFLOW_HOME_DIR
+
+    # Dry run - only show docker-compose and docker commands but do not execute them
+    export DRY_RUN_DOCKER=${DRY_RUN_DOCKER:="false"}
 }
 
 # Determine current branch
@@ -176,13 +179,26 @@ function initialization::initialize_dockerhub_variables() {
 
 # Determine available integrations
 function initialization::initialize_available_integrations() {
-    export AVAILABLE_INTEGRATIONS="cassandra kerberos mongo openldap pinot presto rabbitmq redis statsd"
+    export AVAILABLE_INTEGRATIONS="cassandra kerberos mongo openldap pinot rabbitmq redis statsd trino"
 }
 
 # Needs to be declared outside of function for MacOS
 FILES_FOR_REBUILD_CHECK=()
 
 # Determine which files trigger rebuild check
+#
+# !!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!
+#  When you add files here, please make sure to not add files
+#  with the same name. And if you do - make sure that files with the
+#  same name are stored in directories with different name. For
+#  example we have two package.json files here, but they are in
+#  directories with different names (`www` and `ui`).
+#  The problem is that md5 hashes of those files are stored in
+#  `./build/directory` in the same directory as <PARENT_DIR>-<FILE>.md5sum.
+#  For example md5sum of the `airflow/www/package.json` file is stored
+#  as `www-package.json` and `airflow/ui/package.json` as `ui-package.json`,
+#  The file list here changes extremely rarely.
+# !!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!
 function initialization::initialize_files_for_rebuild_check() {
     FILES_FOR_REBUILD_CHECK+=(
         "setup.py"
@@ -190,14 +206,17 @@ function initialization::initialize_files_for_rebuild_check() {
         "Dockerfile.ci"
         ".dockerignore"
         "scripts/docker/compile_www_assets.sh"
+        "scripts/docker/common.sh"
         "scripts/docker/install_additional_dependencies.sh"
         "scripts/docker/install_airflow.sh"
-        "scripts/docker/install_airflow_from_latest_master.sh"
+        "scripts/docker/install_airflow_from_branch_tip.sh"
         "scripts/docker/install_from_docker_context_files.sh"
         "scripts/docker/install_mysql.sh"
         "airflow/www/package.json"
         "airflow/www/yarn.lock"
         "airflow/www/webpack.config.js"
+        "airflow/ui/package.json"
+        "airflow/ui/yarn.lock"
     )
 }
 
@@ -251,8 +270,12 @@ function initialization::initialize_mount_variables() {
 
 # Determine values of force settings
 function initialization::initialize_force_variables() {
-    # Whether necessary for airflow run local sources are mounted to docker
+    # By default we do not pull CI/PROD images. We can force-pull them when needed
     export FORCE_PULL_IMAGES=${FORCE_PULL_IMAGES:="false"}
+
+    # By default we do not pull python base image. We should do that only when we run upgrade check in
+    # CI master and when we manually refresh the images to latest versions
+    export FORCE_PULL_BASE_PYTHON_IMAGE="false"
 
     # Determines whether to force build without checking if it is needed
     # Can be overridden by '--force-build-images' flag.
@@ -311,7 +334,7 @@ function initialization::initialize_image_build_variables() {
     # Default build id
     export CI_BUILD_ID="${CI_BUILD_ID:="0"}"
 
-    # Default extras used for building Production image. The master of this information is in the Dockerfile
+    # Default extras used for building Production image. The canonical source of this information is in the Dockerfile
     DEFAULT_PROD_EXTRAS=$(grep "ARG AIRFLOW_EXTRAS=" "${AIRFLOW_SOURCES}/Dockerfile" |
         awk 'BEGIN { FS="=" } { print $2 }' | tr -d '"')
     export DEFAULT_PROD_EXTRAS
@@ -449,21 +472,19 @@ function initialization::initialize_provider_package_building() {
     export VERSION_SUFFIX_FOR_PYPI="${VERSION_SUFFIX_FOR_PYPI=}"
     # Artifact name suffix for SVN packaging
     export VERSION_SUFFIX_FOR_SVN="${VERSION_SUFFIX_FOR_SVN=}"
-    # If set to true, the backport provider packages will be built (false will build regular provider packages)
-    export BACKPORT_PACKAGES=${BACKPORT_PACKAGES:="false"}
 
 }
 
 # Determine versions of kubernetes cluster and tools used
 function initialization::initialize_kubernetes_variables() {
     # Currently supported versions of Kubernetes
-    CURRENT_KUBERNETES_VERSIONS+=("v1.18.6" "v1.17.5" "v1.16.9")
+    CURRENT_KUBERNETES_VERSIONS+=("v1.20.2" "v1.19.7" "v1.18.15")
     export CURRENT_KUBERNETES_VERSIONS
     # Currently supported modes of Kubernetes
     CURRENT_KUBERNETES_MODES+=("image")
     export CURRENT_KUBERNETES_MODES
     # Currently supported versions of Kind
-    CURRENT_KIND_VERSIONS+=("v0.8.0")
+    CURRENT_KIND_VERSIONS+=("v0.10.0")
     export CURRENT_KIND_VERSIONS
     # Currently supported versions of Helm
     CURRENT_HELM_VERSIONS+=("v3.2.4")
@@ -489,14 +510,18 @@ function initialization::initialize_kubernetes_variables() {
     # Kubectl version
     export KUBECTL_VERSION=${KUBERNETES_VERSION:=${DEFAULT_KUBERNETES_VERSION}}
     # Local Kind path
-    export KIND_BINARY_PATH="${BUILD_CACHE_DIR}/bin/kind"
+    export KIND_BINARY_PATH="${BUILD_CACHE_DIR}/kubernetes-bin/${KUBERNETES_VERSION}/kind"
     readonly KIND_BINARY_PATH
     # Local Helm path
-    export HELM_BINARY_PATH="${BUILD_CACHE_DIR}/bin/helm"
+    export HELM_BINARY_PATH="${BUILD_CACHE_DIR}/kubernetes-bin/${KUBERNETES_VERSION}/helm"
     readonly HELM_BINARY_PATH
     # local Kubectl path
-    export KUBECTL_BINARY_PATH="${BUILD_CACHE_DIR}/bin/kubectl"
+    export KUBECTL_BINARY_PATH="${BUILD_CACHE_DIR}/kubernetes-bin/${KUBERNETES_VERSION}/kubectl"
     readonly KUBECTL_BINARY_PATH
+    FORWARDED_PORT_NUMBER="${FORWARDED_PORT_NUMBER:="8080"}"
+    readonly FORWARDED_PORT_NUMBER
+    API_SERVER_PORT="${API_SERVER_PORT:="19090"}"
+    readonly API_SERVER_PORT
 }
 
 function initialization::initialize_git_variables() {
@@ -524,7 +549,10 @@ function initialization::initialize_github_variables() {
 }
 
 function initialization::initialize_test_variables() {
-    export TEST_TYPE=${TEST_TYPE:=""}
+
+    # In case we want to force certain test type to run, this variable should be set to this type
+    # Otherwise TEST_TYPEs to run will be derived from TEST_TYPES space-separated string
+    export FORCE_TEST_TYPE=${FORCE_TEST_TYPE:=""}
 }
 
 function initialization::initialize_package_variables() {
@@ -544,11 +572,13 @@ function initialization::set_output_color_variables() {
     COLOR_RED=$'\e[31m'
     COLOR_RESET=$'\e[0m'
     COLOR_YELLOW=$'\e[33m'
+    COLOR_CYAN=$'\e[36m'
     export COLOR_BLUE
     export COLOR_GREEN
     export COLOR_RED
     export COLOR_RESET
     export COLOR_YELLOW
+    export COLOR_CYAN
 }
 
 # Common environment that is initialized by both Breeze and CI scripts
@@ -686,7 +716,7 @@ Initialization variables:
 
 Test variables:
 
-    TEST_TYPE: '${TEST_TYPE}'
+    TEST_TYPE: '${TEST_TYPE=}'
 
 EOF
     if [[ "${CI}" == "true" ]]; then
@@ -741,10 +771,6 @@ function initialization::make_constants_read_only() {
     # Set the arguments as read-only
     readonly PYTHON_MAJOR_MINOR_VERSION
 
-    readonly WEBSERVER_HOST_PORT
-    readonly POSTGRES_HOST_PORT
-    readonly MYSQL_HOST_PORT
-
     readonly HOST_USER_ID
     readonly HOST_GROUP_ID
     readonly HOST_HOME
@@ -756,7 +782,6 @@ function initialization::make_constants_read_only() {
     readonly HELM_VERSION
     readonly KUBECTL_VERSION
 
-    readonly BACKEND
     readonly POSTGRES_VERSION
     readonly MYSQL_VERSION
 

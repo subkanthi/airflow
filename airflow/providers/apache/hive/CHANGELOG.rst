@@ -19,6 +19,25 @@
 Changelog
 ---------
 
+1.0.3
+.....
+
+Bug fixes
+~~~~~~~~~
+
+* ``Fix mistake and typos in doc/docstrings (#15180)``
+* ``Fix grammar and remove duplicate words (#14647)``
+* ``Resolve issue related to HiveCliHook kill (#14542)``
+
+1.0.2
+.....
+
+Bug fixes
+~~~~~~~~~
+
+* ``Corrections in docs and tools after releasing provider RCs (#14082)``
+
+
 1.0.1
 .....
 
