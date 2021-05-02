@@ -57,6 +57,7 @@ _breeze_allowed_installation_methods=". apache-airflow"
 }
 
 _breeze_allowed_install_airflow_versions=$(cat <<-EOF
+2.0.2
 2.0.1
 2.0.0
 1.10.15
@@ -182,6 +183,7 @@ runtime-apt-deps: additional-runtime-apt-deps: runtime-apt-command: additional-r
 load-default-connections load-example-dags
 use-packages-from-dist no-rbac-ui package-format: upgrade-to-newer-dependencies installation-method: continue-on-pip-check-failure
 use-airflow-version:
+cleanup-docker-context-files
 test-type: preserve-volumes dry-run-docker
 "
 
