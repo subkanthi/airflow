@@ -19,6 +19,7 @@
 # under the License.
 """Setup.py for the Provider packages of Airflow project."""
 import collections
+import difflib
 import glob
 import importlib
 import json
@@ -47,6 +48,8 @@ from packaging.version import Version
 from rich import print
 from rich.console import Console
 from rich.syntax import Syntax
+
+from airflow.providers_manager import ProviderInfo
 
 try:
     from yaml import CSafeLoader as SafeLoader
@@ -84,7 +87,7 @@ Initial version of the provider.
 """
 
 HTTPS_REMOTE = "apache-https-for-providers"
-HEAD_OF_HTTPS_REMOTE = f"{HTTPS_REMOTE}/master"
+HEAD_OF_HTTPS_REMOTE = f"{HTTPS_REMOTE}/main"
 
 PROVIDER_TEMPLATE_PREFIX = "PROVIDER_"
 
@@ -152,6 +155,11 @@ option_verbose = click.option(
     "--verbose",
     is_flag=True,
     help="Print verbose information about performed steps",
+)
+option_force = click.option(
+    "--force",
+    is_flag=True,
+    help="Forces regeneration of already generated documentation",
 )
 argument_package_id = click.argument('package_id')
 
@@ -312,6 +320,16 @@ def get_pip_package_name(provider_package_id: str) -> str:
     return "apache-airflow-providers-" + provider_package_id.replace(".", "-")
 
 
+def get_wheel_package_name(provider_package_id: str) -> str:
+    """
+    Returns PIP package name for the package id.
+
+    :param provider_package_id: id of the package
+    :return: the name of pip package
+    """
+    return "apache_airflow_providers_" + provider_package_id.replace(".", "_")
+
+
 def get_long_description(provider_package_id: str) -> str:
     """
     Gets long description of the package.
@@ -348,7 +366,7 @@ def get_install_requirements(provider_package_id: str) -> List[str]:
     :return: install requirements of the package
     """
     dependencies = PROVIDERS_REQUIREMENTS[provider_package_id]
-    airflow_dependency = 'apache-airflow>=2.0.0'
+    airflow_dependency = 'apache-airflow>=2.1.0'
     # Avoid circular dependency for the preinstalled packages
     install_requires = [airflow_dependency] if provider_package_id not in PREINSTALLED_PROVIDERS else []
     install_requires.extend(dependencies)
@@ -545,7 +563,7 @@ def convert_new_classes_to_table(
     from tabulate import tabulate
 
     headers = [f"New Airflow 2.0 {entity_type.value.lower()}: `{full_package_name}` package"]
-    table = [(get_class_code_link(full_package_name, class_name, "master"),) for class_name in new_entities]
+    table = [(get_class_code_link(full_package_name, class_name, "main"),) for class_name in new_entities]
     return tabulate(table, headers=headers, tablefmt="pipe")
 
 
@@ -569,7 +587,7 @@ def convert_moved_classes_to_table(
     ]
     table = [
         (
-            get_class_code_link(full_package_name, to_class, "master"),
+            get_class_code_link(full_package_name, to_class, "main"),
             get_class_code_link("airflow", moved_entities[to_class], "v1-10-stable"),
         )
         for to_class in sorted(moved_entities.keys())
@@ -783,22 +801,41 @@ def render_template(
     return content
 
 
+PR_PATTERN = re.compile(r".*\(#([0-9]+)\)")
+
+
 class Change(NamedTuple):
+    """Stores details about commits"""
+
     full_hash: str
     short_hash: str
     date: str
+    version: str
     message: str
+    message_without_backticks: str
+    pr: Optional[str]
 
 
-def get_change_from_line(line: str):
+def get_change_from_line(line: str, version: str):
     split_line = line.split(" ", maxsplit=3)
+    message = split_line[3]
+    pr = None
+    pr_match = PR_PATTERN.match(message)
+    if pr_match:
+        pr = pr_match.group(1)
     return Change(
-        full_hash=split_line[0], short_hash=split_line[1], date=split_line[2], message=split_line[3]
+        full_hash=split_line[0],
+        short_hash=split_line[1],
+        date=split_line[2],
+        version=version,
+        message=message,
+        message_without_backticks=message.replace("`", "'"),
+        pr=pr,
     )
 
 
 def convert_git_changes_to_table(
-    print_version: Optional[str], changes: str, base_url: str, markdown: bool = True
+    version: str, changes: str, base_url: str, markdown: bool = True
 ) -> Tuple[str, List[Change]]:
     """
     Converts list of changes from it's string form to markdown/RST table and array of change information
@@ -808,7 +845,7 @@ def convert_git_changes_to_table(
 
     The subject can contain spaces but one of the preceding values can, so we can make split
     3 times on spaces to break it up.
-    :param print_version: Version to print
+    :param version: Version from which the changes are
     :param changes: list of changes in a form of multiple-line string
     :param base_url: base url for the commit URL
     :param markdown: if True, markdown format is used else rst
@@ -823,15 +860,16 @@ def convert_git_changes_to_table(
     for line in lines:
         if line == "":
             continue
-        change = get_change_from_line(line)
-        message_without_backticks = change.message.replace("`", "'")
+        change = get_change_from_line(line, version)
         table_data.append(
             (
                 f"[{change.short_hash}]({base_url}{change.full_hash})"
                 if markdown
                 else f"`{change.short_hash} <{base_url}{change.full_hash}>`_",
                 change.date,
-                f"`{message_without_backticks}`" if markdown else f"``{message_without_backticks}``",
+                f"`{change.message_without_backticks}`"
+                if markdown
+                else f"``{change.message_without_backticks}``",
             )
         )
         changes_list.append(change)
@@ -840,7 +878,7 @@ def convert_git_changes_to_table(
         return header, []
     table = tabulate(table_data, headers=headers, tablefmt="pipe" if markdown else "rst")
     if not markdown:
-        header += f"\n\n{print_version}\n" + "." * (len(print_version) if print_version else 0) + "\n\n"
+        header += f"\n\n{version}\n" + "." * len(version) + "\n\n"
         release_date = table_data[0][1]
         header += f"Latest change: {release_date}\n\n"
     return header + table, changes_list
@@ -1370,7 +1408,15 @@ def get_all_changes_for_package(
     provider_package_id: str,
     source_provider_package_path: str,
     verbose: bool,
-) -> Tuple[bool, Optional[Change], str]:
+) -> Tuple[bool, Optional[List[List[Change]]], str]:
+    """
+    Retrieves all changes for the package.
+    :param versions: list of versions
+    :param provider_package_id: provider package id
+    :param source_provider_package_path: path where package is located
+    :param verbose: whether to print verbose messages
+
+    """
     current_version = versions[0]
     current_tag_no_suffix = get_version_tag(current_version, provider_package_id)
     if verbose:
@@ -1419,7 +1465,10 @@ def get_all_changes_for_package(
             )
             print("[yellow]Or mark the changes as doc-only[/]")
             changes_table, array_of_changes = convert_git_changes_to_table(
-                "UNKNOWN", changes, base_url="https://github.com/apache/airflow/commit/", markdown=False
+                "UNKNOWN",
+                changes,
+                base_url="https://github.com/apache/airflow/commit/",
+                markdown=False,
             )
             print_changes_table(changes_table)
             return False, array_of_changes[0], changes_table
@@ -1434,8 +1483,8 @@ def get_all_changes_for_package(
         print(f"New version of the '{provider_package_id}' package is ready to be released!\n")
     next_version_tag = HEAD_OF_HTTPS_REMOTE
     changes_table = ''
-    print_version = versions[0]
-    array_of_changes: List[Change] = []
+    current_version = versions[0]
+    list_of_list_of_changes: List[List[Change]] = []
     for version in versions[1:]:
         version_tag = get_version_tag(version, provider_package_id)
         changes = subprocess.check_output(
@@ -1444,24 +1493,24 @@ def get_all_changes_for_package(
             universal_newlines=True,
         )
         changes_table_for_version, array_of_changes_for_version = convert_git_changes_to_table(
-            print_version, changes, base_url="https://github.com/apache/airflow/commit/", markdown=False
+            current_version, changes, base_url="https://github.com/apache/airflow/commit/", markdown=False
         )
         changes_table += changes_table_for_version
-        array_of_changes.extend(array_of_changes_for_version)
+        list_of_list_of_changes.append(array_of_changes_for_version)
         next_version_tag = version_tag
-        print_version = version
+        current_version = version
     changes = subprocess.check_output(
         get_git_log_command(verbose, next_version_tag),
         cwd=source_provider_package_path,
         universal_newlines=True,
     )
     changes_table_for_version, array_of_changes_for_version = convert_git_changes_to_table(
-        print_version, changes, base_url="https://github.com/apache/airflow/commit/", markdown=False
+        current_version, changes, base_url="https://github.com/apache/airflow/commit/", markdown=False
     )
     changes_table += changes_table_for_version
     if verbose:
         print_changes_table(changes_table)
-    return True, array_of_changes[0], changes_table
+    return True, list_of_list_of_changes if len(list_of_list_of_changes) > 0 else None, changes_table
 
 
 def get_provider_details(provider_package_id: str) -> ProviderPackageDetails:
@@ -1477,6 +1526,7 @@ def get_provider_details(provider_package_id: str) -> ProviderPackageDetails:
 
 
 def get_provider_jinja_context(
+    provider_info: ProviderInfo,
     provider_details: ProviderPackageDetails,
     current_release_version: str,
     version_suffix: str,
@@ -1503,6 +1553,7 @@ def get_provider_jinja_context(
         "README_FILE": "README.rst",
         "PROVIDER_PACKAGE_ID": provider_details.provider_package_id,
         "PACKAGE_PIP_NAME": get_pip_package_name(provider_details.provider_package_id),
+        "PACKAGE_WHEEL_NAME": get_wheel_package_name(provider_details.provider_package_id),
         "FULL_PACKAGE_NAME": provider_details.full_package_name,
         "PROVIDER_PATH": provider_details.full_package_name.replace(".", "/"),
         "RELEASE": current_release_version,
@@ -1528,6 +1579,7 @@ def get_provider_jinja_context(
         "CROSS_PROVIDERS_DEPENDENCIES_TABLE_RST": cross_providers_dependencies_table_rst,
         "PIP_REQUIREMENTS_TABLE": pip_requirements_table,
         "PIP_REQUIREMENTS_TABLE_RST": pip_requirements_table_rst,
+        "PROVIDER_INFO": provider_info,
     }
     return context
 
@@ -1575,6 +1627,7 @@ def mark_latest_changes_as_documentation_only(
 def update_release_notes(
     provider_package_id: str,
     version_suffix: str,
+    force: bool,
     verbose: bool,
     interactive: bool,
 ) -> bool:
@@ -1583,6 +1636,7 @@ def update_release_notes(
 
     :param provider_package_id: id of the package
     :param version_suffix: version suffix corresponding to the version in the code
+    :param force: regenerate already released documentation
     :param verbose: whether to print verbose messages
     :param interactive: whether the script should ask the user in case of doubt
     :returns False if the package should be skipped, True if everything generated properly
@@ -1592,39 +1646,36 @@ def update_release_notes(
     provider_info = get_provider_info_from_provider_yaml(provider_package_id)
     current_release_version = provider_details.versions[0]
     jinja_context = get_provider_jinja_context(
+        provider_info=provider_info,
         provider_details=provider_details,
         current_release_version=current_release_version,
         version_suffix=version_suffix,
     )
-    jinja_context["PROVIDER_INFO"] = provider_info
     proceed, latest_change, changes = get_all_changes_for_package(
         provider_details.versions,
         provider_package_id,
         provider_details.source_provider_package_path,
         verbose,
     )
-    if proceed:
-        if interactive and not confirm("Provider marked for release. Proceed?"):
+    if not force:
+        if proceed:
+            if interactive and not confirm("Provider marked for release. Proceed?"):
+                return False
+        elif not latest_change:
+            print()
+            print(
+                f"[yellow]Provider: {provider_package_id} - skipping documentation generation. No changes![/]"
+            )
+            print()
             return False
-    elif not latest_change:
-        print()
-        print(f"[yellow]Provider: {provider_package_id} - skipping documentation generation. No changes![/]")
-        print()
-        return False
-    else:
-        if interactive and confirm("Are those changes documentation-only?"):
-            mark_latest_changes_as_documentation_only(provider_details, latest_change)
-        return False
+        else:
+            if interactive and confirm("Are those changes documentation-only?"):
+                mark_latest_changes_as_documentation_only(provider_details, latest_change)
+            return False
 
     jinja_context["DETAILED_CHANGES_RST"] = changes
     jinja_context["DETAILED_CHANGES_PRESENT"] = len(changes) > 0
-    print()
-    print(f"Update index.rst for {provider_package_id}")
-    print()
-    update_index_rst_for_regular_providers(
-        jinja_context, provider_package_id, provider_details.documentation_provider_package_path
-    )
-    update_commits_rst_for_regular_providers(
+    update_commits_rst(
         jinja_context, provider_package_id, provider_details.documentation_provider_package_path
     )
     return True
@@ -1639,18 +1690,18 @@ def update_setup_files(
 
     :param provider_package_id: id of the package
     :param version_suffix: version suffix corresponding to the version in the code
-    :returns False if the package should be skipped, Tre if everything generated properly
+    :returns False if the package should be skipped, True if everything generated properly
     """
     verify_provider_package(provider_package_id)
     provider_details = get_provider_details(provider_package_id)
     provider_info = get_provider_info_from_provider_yaml(provider_package_id)
     current_release_version = provider_details.versions[0]
     jinja_context = get_provider_jinja_context(
+        provider_info=provider_info,
         provider_details=provider_details,
         current_release_version=current_release_version,
         version_suffix=version_suffix,
     )
-    jinja_context["PROVIDER_INFO"] = provider_info
     print()
     print(f"Generating setup files for {provider_package_id}")
     print()
@@ -1684,7 +1735,7 @@ AUTOMATICALLY_GENERATED_CONTENT = (
 )
 
 
-def update_index_rst_for_regular_providers(
+def update_index_rst(
     context,
     provider_package_id,
     target_path,
@@ -1708,7 +1759,7 @@ def update_index_rst_for_regular_providers(
     replace_content(index_file_path, old_text, new_text, provider_package_id)
 
 
-def update_commits_rst_for_regular_providers(
+def update_commits_rst(
     context,
     provider_package_id,
     target_path,
@@ -1842,12 +1893,14 @@ def list_providers_packages():
 @option_git_update
 @option_interactive
 @argument_package_id
+@option_force
 @option_verbose
 def update_package_documentation(
     version_suffix: str,
     git_update: bool,
     interactive: bool,
     package_id: str,
+    force: bool,
     verbose: bool,
 ):
     """
@@ -1861,7 +1914,7 @@ def update_package_documentation(
         print("Updating documentation for the latest release version.")
         make_sure_remote_apache_exists_and_fetch(git_update, verbose)
         if not update_release_notes(
-            provider_package_id, version_suffix, verbose=verbose, interactive=interactive
+            provider_package_id, version_suffix, force=force, verbose=verbose, interactive=interactive
         ):
             # Returns 64 in case of skipped package
             sys.exit(64)
@@ -2019,7 +2072,7 @@ def verify_provider_classes_for_single_provider(imported_classes: List[str], pro
     full_package_name = f"airflow.providers.{provider_package_id}"
     entity_summaries = get_package_class_summary(full_package_name, imported_classes)
     total, bad = check_if_classes_are_properly_named(entity_summaries)
-    bad += sum([len(entity_summary.wrong_entities) for entity_summary in entity_summaries.values()])
+    bad += sum(len(entity_summary.wrong_entities) for entity_summary in entity_summaries.values())
     if bad != 0:
         print()
         print(f"[red]There are {bad} errors of {total} entities for {provider_package_id}[/]")
@@ -2054,7 +2107,7 @@ def summarise_total_vs_bad(total: int, bad: int):
 
 @cli.command()
 def verify_provider_classes():
-    """Verifies if all classes in all providers are correctly named."""
+    """Verifies names for all provider classes."""
     with with_group("Verifies names for all provider classes"):
         provider_ids = get_all_providers()
         imported_classes = import_all_classes(
@@ -2072,6 +2125,149 @@ def verify_provider_classes():
             total += inc_total
             bad += inc_bad
         summarise_total_vs_bad(total, bad)
+
+
+def find_insertion_index_for_version(content: List[str], version: str) -> Tuple[int, bool]:
+    """
+    Finds insertion index for the specified version from the .rst changelog content.
+
+    :param content: changelog split into separate lines
+    :param version: version to look for
+
+    :return: Tuple : insertion_index, append (whether to append or insert the changelog)
+    """
+    changelog_found = False
+    skip_next_line = False
+    index = 0
+    for index, line in enumerate(content):
+        if not changelog_found and line.strip() == version:
+            changelog_found = True
+            skip_next_line = True
+        elif not skip_next_line and line and all(char == '.' for char in line):
+            return index - 2, changelog_found
+        else:
+            skip_next_line = False
+    return index, changelog_found
+
+
+class ClassifiedChanges(NamedTuple):
+    """Stores lists of changes classified automatically"""
+
+    fixes: List[Change] = []
+    features: List[Change] = []
+    breaking_changes: List[Change] = []
+    other: List[Change] = []
+
+
+def get_changes_classified(changes: List[Change]) -> ClassifiedChanges:
+    """
+    Pre-classifies changes based on commit messsage, it's wildly guessing now,
+    but if we switch to semantic commits, it could be automated. This list is supposed to be manually
+    reviewed and re-classified by release manager anyway.
+
+    :param changes: list of changes
+    :return: list of changes classified semi-automatically to the fix/feature/breaking/other buckets
+    """
+    classified_changes = ClassifiedChanges()
+    for change in changes:
+        if "fix" in change.message.lower():
+            classified_changes.fixes.append(change)
+        elif "add" in change.message.lower():
+            classified_changes.features.append(change)
+        elif "breaking" in change.message.lower():
+            classified_changes.breaking_changes.append(change)
+        else:
+            classified_changes.other.append(change)
+    return classified_changes
+
+
+@cli.command()
+@argument_package_id
+@option_verbose
+@option_interactive
+def update_changelog(package_id: str, verbose: bool, interactive: bool):
+    """Updates changelog for the provider."""
+    with with_group("Updates changelog for last release"):
+        verify_provider_package(package_id)
+        provider_details = get_provider_details(package_id)
+        provider_info = get_provider_info_from_provider_yaml(package_id)
+        current_release_version = provider_details.versions[0]
+        jinja_context = get_provider_jinja_context(
+            provider_info=provider_info,
+            provider_details=provider_details,
+            current_release_version=current_release_version,
+            version_suffix='',
+        )
+        changelog_path = os.path.join(provider_details.source_provider_package_path, "CHANGELOG.rst")
+        proceed, changes, _ = get_all_changes_for_package(
+            provider_details.versions,
+            package_id,
+            provider_details.source_provider_package_path,
+            verbose,
+        )
+        if not proceed:
+            print(f"[yellow]The provider {package_id} is not being released. Skipping the package.[/]")
+            sys.exit(64)
+        generate_new_changelog(package_id, provider_details, changelog_path, changes)
+        print()
+        print(f"Update index.rst for {package_id}")
+        print()
+        update_index_rst(jinja_context, package_id, provider_details.documentation_provider_package_path)
+
+
+def generate_new_changelog(package_id, provider_details, changelog_path, changes):
+    latest_version = provider_details.versions[0]
+    with open(changelog_path) as changelog:
+        current_changelog = changelog.read()
+    current_changelog_lines = current_changelog.splitlines()
+    insertion_index, append = find_insertion_index_for_version(current_changelog_lines, latest_version)
+    if append:
+        if not changes:
+            print(
+                f"[green]The provider {package_id} changelog for `{latest_version}` "
+                "has first release. Not updating the changelog.[/]"
+            )
+            return
+        new_changes = [
+            change for change in changes[0] if change.pr and "(#" + change.pr + ")" not in current_changelog
+        ]
+        if not new_changes:
+            print(
+                f"[green]The provider {package_id} changelog for `{latest_version}` "
+                "has no new changes. Not updating the changelog.[/]"
+            )
+            return
+        context = {"new_changes": new_changes}
+        generated_new_changelog = render_template(
+            template_name='UPDATE_CHANGELOG', context=context, extension=".rst"
+        )
+    else:
+        classified_changes = get_changes_classified(changes[0])
+        context = {
+            "version": latest_version,
+            "version_header": "." * len(latest_version),
+            "classified_changes": classified_changes,
+        }
+        generated_new_changelog = render_template(
+            template_name='CHANGELOG', context=context, extension=".rst"
+        )
+    new_changelog_lines = current_changelog_lines[0:insertion_index]
+    new_changelog_lines.extend(generated_new_changelog.splitlines())
+    new_changelog_lines.extend(current_changelog_lines[insertion_index:])
+    diff = "\n".join(difflib.context_diff(current_changelog_lines, new_changelog_lines, n=5))
+    syntax = Syntax(diff, "diff")
+    console = Console(width=200)
+    console.print(syntax)
+    if not append:
+        print(
+            f"[green]The provider {package_id} changelog for `{latest_version}` "
+            "version is missing. Generating fresh changelog.[/]"
+        )
+    else:
+        print(f"[green]Appending the provider {package_id} changelog for" f"`{latest_version}` version.[/]")
+    with open(changelog_path, "wt") as changelog:
+        changelog.write("\n".join(new_changelog_lines))
+        changelog.write("\n")
 
 
 if __name__ == "__main__":

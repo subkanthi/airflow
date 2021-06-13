@@ -106,11 +106,9 @@ class TaskGroup(TaskMixin):
                 raise DuplicateTaskIdFound(f"group_id '{self.group_id}' has already been added to the DAG")
             base = re.split(r'__\d+$', group_id)[0]
             suffixes = sorted(
-                [
-                    int(re.split(r'^.+__', used_group_id)[1])
-                    for used_group_id in self.used_group_ids
-                    if used_group_id is not None and re.match(rf'^{base}__\d+$', used_group_id)
-                ]
+                int(re.split(r'^.+__', used_group_id)[1])
+                for used_group_id in self.used_group_ids
+                if used_group_id is not None and re.match(rf'^{base}__\d+$', used_group_id)
             )
             if not suffixes:
                 self._group_id += '__1'
@@ -183,7 +181,7 @@ class TaskGroup(TaskMixin):
         Overrides TaskMixin.update_relative.
 
         Update upstream_group_ids/downstream_group_ids/upstream_task_ids/downstream_task_ids
-        accordingly so that we can reduce the number of edges when displaying Graph View.
+        accordingly so that we can reduce the number of edges when displaying Graph view.
         """
         from airflow.models.baseoperator import BaseOperator
 
@@ -294,7 +292,7 @@ class TaskGroup(TaskMixin):
     def upstream_join_id(self) -> str:
         """
         If this TaskGroup has immediate upstream TaskGroups or tasks, a dummy node called
-        upstream_join_id will be created in Graph View to join the outgoing edges from this
+        upstream_join_id will be created in Graph view to join the outgoing edges from this
         TaskGroup to reduce the total number of edges needed to be displayed.
         """
         return f"{self.group_id}.upstream_join_id"
@@ -303,7 +301,7 @@ class TaskGroup(TaskMixin):
     def downstream_join_id(self) -> str:
         """
         If this TaskGroup has immediate downstream TaskGroups or tasks, a dummy node called
-        downstream_join_id will be created in Graph View to join the outgoing edges from this
+        downstream_join_id will be created in Graph view to join the outgoing edges from this
         TaskGroup to reduce the total number of edges needed to be displayed.
         """
         return f"{self.group_id}.downstream_join_id"

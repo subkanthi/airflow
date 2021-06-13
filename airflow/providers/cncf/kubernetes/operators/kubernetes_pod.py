@@ -45,7 +45,6 @@ from airflow.providers.cncf.kubernetes.backcompat.backwards_compat_converters im
 )
 from airflow.providers.cncf.kubernetes.backcompat.pod_runtime_info_env import PodRuntimeInfoEnv
 from airflow.providers.cncf.kubernetes.utils import pod_launcher, xcom_sidecar
-from airflow.utils.decorators import apply_defaults
 from airflow.utils.helpers import validate_key
 from airflow.utils.state import State
 from airflow.version import version as airflow_version
@@ -173,8 +172,9 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
         'pod_template_file',
     )
 
+    template_ext = ('yaml', 'yml', 'json')
+
     # fmt: off
-    @apply_defaults
     def __init__(  # pylint: disable=too-many-arguments,too-many-locals
         # fmt: on
         self,
@@ -196,7 +196,7 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
         reattach_on_restart: bool = True,
         startup_timeout_seconds: int = 120,
         get_logs: bool = True,
-        image_pull_policy: str = 'IfNotPresent',
+        image_pull_policy: Optional[str] = None,
         annotations: Optional[Dict] = None,
         resources: Optional[k8s.V1ResourceRequirements] = None,
         affinity: Optional[k8s.V1Affinity] = None,
@@ -204,7 +204,7 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
         node_selectors: Optional[dict] = None,
         node_selector: Optional[dict] = None,
         image_pull_secrets: Optional[List[k8s.V1LocalObjectReference]] = None,
-        service_account_name: str = 'default',
+        service_account_name: Optional[str] = None,
         is_delete_operator_pod: bool = False,
         hostnetwork: bool = False,
         tolerations: Optional[List[k8s.V1Toleration]] = None,
@@ -259,7 +259,7 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
         else:
             self.node_selector = {}
         self.annotations = annotations or {}
-        self.affinity = convert_affinity(affinity) if affinity else k8s.V1Affinity()
+        self.affinity = convert_affinity(affinity) if affinity else {}
         self.k8s_resources = convert_resources(resources) if resources else {}
         self.config_file = config_file
         self.image_pull_secrets = convert_image_pull_secrets(image_pull_secrets) if image_pull_secrets else []
@@ -347,8 +347,6 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
 
             label_selector = self._get_pod_identifying_label_string(labels)
 
-            self.namespace = self.pod.metadata.namespace
-
             pod_list = client.list_namespaced_pod(self.namespace, label_selector=label_selector)
 
             if len(pod_list.items) > 1 and self.reattach_on_restart:
@@ -369,6 +367,8 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
             if final_state != State.SUCCESS:
                 status = self.client.read_namespaced_pod(self.pod.metadata.name, self.namespace)
                 raise AirflowException(f'Pod {self.pod.metadata.name} returned a failure: {status}')
+            context['task_instance'].xcom_push(key='pod_name', value=self.pod.metadata.name)
+            context['task_instance'].xcom_push(key='pod_namespace', value=self.namespace)
             return result
         except AirflowException as ex:
             raise AirflowException(f'Pod Launching failed: {ex}')
@@ -410,7 +410,7 @@ class KubernetesPodOperator(BaseOperator):  # pylint: disable=too-many-instance-
     @staticmethod
     def _get_pod_identifying_label_string(labels) -> str:
         filtered_labels = {label_id: label for label_id, label in labels.items() if label_id != 'try_number'}
-        return ','.join([label_id + '=' + label for label_id, label in sorted(filtered_labels.items())])
+        return ','.join(label_id + '=' + label for label_id, label in sorted(filtered_labels.items()))
 
     @staticmethod
     def _try_numbers_match(context, pod) -> bool:
