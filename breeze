@@ -3045,6 +3045,9 @@ function breeze::read_saved_environment_variables() {
     POSTGRES_VERSION="${POSTGRES_VERSION:=$(parameters::read_from_file POSTGRES_VERSION)}"
     POSTGRES_VERSION=${POSTGRES_VERSION:=${_breeze_default_postgres_version}}
 
+    MARIADB_VERSION="${MARIADB_VERSION:=$(parameters::read_from_file MARIADB_VERSION)}"
+    MARIADB_VERSION=${MARIADB_VERSION:=${_breeze_default_mariadb_version}}
+
     MYSQL_VERSION="${MYSQL_VERSION:=$(parameters::read_from_file MYSQL_VERSION)}"
     MYSQL_VERSION=${MYSQL_VERSION:=${_breeze_default_mysql_version}}
 
@@ -3071,6 +3074,7 @@ function breeze::read_saved_environment_variables() {
 #     HELM_VERSION
 #     EXECUTOR
 #     POSTGRES_VERSION
+#     MARIADB_VERSION
 #     MYSQL_VERSION
 #     MSSQL_VERSION
 #
@@ -3103,6 +3107,7 @@ function breeze::check_and_save_all_params() {
     parameters::check_and_save_allowed_param "HELM_VERSION" "Helm version" "--helm-version"
     parameters::check_and_save_allowed_param "EXECUTOR" "Executors" "--executor"
     parameters::check_and_save_allowed_param "POSTGRES_VERSION" "Postgres version" "--postgres-version"
+    parameters::check_and_save_allowed_param "MARIADB_VERSION" "MariaDb version" "--mariadb-version"
     parameters::check_and_save_allowed_param "MYSQL_VERSION" "Mysql version" "--mysql-version"
     parameters::check_and_save_allowed_param "MSSQL_VERSION" "MSSql version" "--mssql-version"
 

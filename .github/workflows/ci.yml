@@ -1220,6 +1220,7 @@ ${{ hashFiles('.pre-commit-config.yaml') }}"
       - static-checks
       - tests-sqlite
       - tests-mysql
+      - tests-mariadb
       - tests-mssql
       - tests-postgres
       - tests-kubernetes
