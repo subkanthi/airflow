@@ -30,12 +30,12 @@ from typing import Any, Dict, Iterable, List, Optional
 import pandas as pd
 from simple_salesforce import Salesforce, api
 
-from airflow.providers.salesforce.hooks.salesforce_base import SalesforceBaseHook
+from airflow.hooks.base import BaseHook
 
 log = logging.getLogger(__name__)
 
 
-class SalesforceHook(SalesforceBaseHook):
+class SalesforceBaseHook(BaseHook):
     """
     Creates new connection to Salesforce and allows you to pull data out of SFDC and save it to a file.
 

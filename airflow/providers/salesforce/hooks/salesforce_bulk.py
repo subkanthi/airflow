@@ -17,8 +17,8 @@
 # under the License.
 #
 """
-This module contains a Salesforce Hook which allows you to connect to your Salesforce instance,
-retrieve data from it, and write that data to a file for other uses.
+This module contains a Salesforce Bulk API Hook which allows you to connect
+to your Salesforce instance using Bulk API
 
 .. note:: this hook also relies on the simple_salesforce package:
       https://github.com/simple-salesforce/simple-salesforce
@@ -35,7 +35,7 @@ from airflow.providers.salesforce.hooks.salesforce_base import SalesforceBaseHoo
 log = logging.getLogger(__name__)
 
 
-class SalesforceHook(SalesforceBaseHook):
+class SalesforceBulkHook(SalesforceBaseHook):
     """
     Creates new connection to Salesforce and allows you to pull data out of SFDC and save it to a file.
 
