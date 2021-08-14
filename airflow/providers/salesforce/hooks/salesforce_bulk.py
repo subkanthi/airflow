@@ -61,46 +61,6 @@ class SalesforceBulkHook(SalesforceHook):
         self.conn_id = salesforce_conn_id
         self.conn = None
 
-    @staticmethod
-    def get_connection_form_widgets() -> Dict[str, Any]:
-        """Returns connection widgets to add to connection form"""
-        from flask_appbuilder.fieldwidgets import BS3PasswordFieldWidget, BS3TextFieldWidget
-        from flask_babel import lazy_gettext
-        from wtforms import PasswordField, StringField
-
-        return {
-            "extra__salesforce__security_token": PasswordField(
-                lazy_gettext("Security Token"), widget=BS3PasswordFieldWidget()
-            ),
-            "extra__salesforce__domain": StringField(lazy_gettext("Domain"), widget=BS3TextFieldWidget()),
-        }
-
-    @staticmethod
-    def get_ui_field_behaviour() -> Dict:
-        """Returns custom field behaviour"""
-        return {
-            "hidden_fields": ["schema", "port", "extra", "host"],
-            "relabeling": {
-                "login": "Username",
-            },
-            "placeholders": {
-                "extra__salesforce__domain": "(Optional)  Set to 'test' if working in sandbox mode.",
-            },
-        }
-
-    def get_conn(self) -> api.Salesforce:
-        """Sign into Salesforce, only if we are not already signed in."""
-        if not self.conn:
-            connection = self.get_connection(self.conn_id)
-            extras = connection.extra_dejson
-            self.conn = Salesforce(
-                username=connection.login,
-                password=connection.password,
-                security_token=extras["extra__salesforce__security_token"],
-                domain=extras["extra__salesforce__domain"] or "login",
-            )
-        return self.conn
-
     def make_query(
         self, query: str, include_deleted: bool = False, query_params: Optional[dict] = None
     ) -> dict:
