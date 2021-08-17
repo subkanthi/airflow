@@ -26,9 +26,9 @@ to your Salesforce instance using Bulk API
 import logging
 import time
 from typing import Any, Dict, Iterable, List, Optional
-from requests import Session
 
 import pandas as pd
+from requests import Session
 
 from airflow.providers.salesforce.hooks.salesforce import SalesforceHook
 
