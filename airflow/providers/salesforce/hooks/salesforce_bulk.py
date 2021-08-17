@@ -26,6 +26,7 @@ to your Salesforce instance using Bulk API
 import logging
 import time
 from typing import Any, Dict, Iterable, List, Optional
+from requests import Session
 
 import pandas as pd
 
@@ -36,30 +37,18 @@ log = logging.getLogger(__name__)
 
 class SalesforceBulkHook(SalesforceHook):
     """
-    Creates new connection to Salesforce and allows you to pull data out of SFDC and save it to a file.
-
-    You can then use that file with other Airflow operators to move the data into another data source.
-
-    :param conn_id: The name of the connection that has the parameters needed to connect to Salesforce.
-        The connection should be of type `Salesforce`.
-    :type conn_id: str
-
-    .. note::
-        To connect to Salesforce make sure the connection includes a Username, Password, and Security Token.
-        If in sandbox, enter a Domain value of 'test'.  Login methods such as IP filtering and JWT are not
-        supported currently.
-
+    Creates new connection to Salesforce Bulkd API and allows you to pull data out of SFDC and save it to a file.
     """
 
-    conn_name_attr = "salesforce_conn_id"
     default_conn_name = "salesforce_default"
-    conn_type = "salesforce"
-    hook_name = "Salesforce"
 
-    def __init__(self, salesforce_conn_id: str = default_conn_name) -> None:
-        super().__init__()
-        self.conn_id = salesforce_conn_id
-        self.conn = None
+    def __init__(
+        self,
+        salesforce_conn_id: str = default_conn_name,
+        session_id: Optional[str] = None,
+        session: Optional[Session] = None,
+    ) -> None:
+        super().__init__(salesforce_conn_id, session_id, session)
 
     def make_query(
         self, query: str, include_deleted: bool = False, query_params: Optional[dict] = None
