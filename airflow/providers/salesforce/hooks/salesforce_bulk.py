@@ -36,8 +36,8 @@ log = logging.getLogger(__name__)
 
 
 class SalesforceBulkHook(SalesforceHook):
-    """ Creates new connection to Salesforce Bulkd API and allows
-    you to pull data out of SFDC and save it to a file. """
+    """Creates new connection to Salesforce Bulkd API and allows
+    you to pull data out of SFDC and save it to a file."""
 
     default_conn_name = "salesforce_default"
 
