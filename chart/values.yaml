@@ -37,10 +37,10 @@ airflowHome: /opt/airflow
 defaultAirflowRepository: apache/airflow
 
 # Default airflow tag to deploy
-defaultAirflowTag: "2.1.2"
+defaultAirflowTag: "2.1.3"
 
 # Airflow version (Used to make some decisions based on Airflow Version being deployed)
-airflowVersion: "2.1.2"
+airflowVersion: "2.1.3"
 
 # Images
 images:
@@ -453,6 +453,8 @@ workers:
     command: ~
     # Args to use when running the Airflow worker log groomer sidecar (templated).
     args: ["bash", "/clean-logs"]
+    # Number of days to retain logs
+    retentionDays: 15
     resources: {}
     #  limits:
     #   cpu: 100m
@@ -546,6 +548,8 @@ scheduler:
     command: ~
     # Args to use when running the Airflow scheduler log groomer sidecar (templated).
     args: ["bash", "/clean-logs"]
+    # Number of days to retain logs
+    retentionDays: 15
     resources: {}
     #  limits:
     #   cpu: 100m
