@@ -30,6 +30,8 @@ from typing import Any, Dict, Iterable, List, Optional
 import pandas as pd
 from requests import Session
 
+from simple_salesforce.bulk import SFBulkType
+
 from airflow.providers.salesforce.hooks.salesforce import SalesforceHook
 
 log = logging.getLogger(__name__)
@@ -38,7 +40,7 @@ log = logging.getLogger(__name__)
 class SalesforceBulkHook(SalesforceHook):
     """
     Creates new connection to Salesforce Bulkd API and allows
-    you to pull data out of SFDC and save it to a file.
+        you to pull data out of SFDC and save it to a file.
     """
 
     default_conn_name = "salesforce_default"
@@ -68,6 +70,11 @@ class SalesforceBulkHook(SalesforceHook):
         """
         conn = self.get_conn()
 
+        sfbulk = SFBulkType(object_name="Contact", bulk_url=self.bulk.bulk_url,
+                            headers=self.bulk.headers, session=self.bulk.session)
+
+        results = sfbulk.query("select id from Contact")
+
         self.log.info("Querying for all objects")
         query_params = query_params or {}
         query_results = conn.query_all(query, include_deleted=include_deleted, **query_params)
@@ -77,36 +84,6 @@ class SalesforceBulkHook(SalesforceHook):
         )
 
         return query_results
-
-    def describe_object(self, obj: str) -> dict:
-        """
-        Get the description of an object from Salesforce.
-        This description is the object's schema and
-        some extra metadata that Salesforce stores for each object.
-
-        :param obj: The name of the Salesforce object that we are getting a description of.
-        :type obj: str
-        :return: the description of the Salesforce object.
-        :rtype: dict
-        """
-        conn = self.get_conn()
-
-        return conn.__getattr__(obj).describe()
-
-    def get_available_fields(self, obj: str) -> List[str]:
-        """
-        Get a list of all available fields for an object.
-
-        :param obj: The name of the Salesforce object that we are getting a description of.
-        :type obj: str
-        :return: the names of the fields.
-        :rtype: list(str)
-        """
-        self.get_conn()
-
-        obj_description = self.describe_object(obj)
-
-        return [field['name'] for field in obj_description['fields']]
 
     def get_object_from_salesforce(self, obj: str, fields: Iterable[str]) -> dict:
         """
@@ -250,66 +227,5 @@ class SalesforceBulkHook(SalesforceHook):
             df.to_json(filename, "records", date_unit="s")
         elif fmt == "ndjson":
             df.to_json(filename, "records", lines=True, date_unit="s")
-
-        return df
-
-    def object_to_df(
-        self, query_results: List[dict], coerce_to_timestamp: bool = False, record_time_added: bool = False
-    ) -> pd.DataFrame:
-        """
-        Export query results to dataframe.
-
-        By default, this function will try and leave all values as they are represented in Salesforce.
-        You use the `coerce_to_timestamp` flag to force all datetimes to become Unix timestamps (UTC).
-        This is can be greatly beneficial as it will make all of your datetime fields look the same,
-        and makes it easier to work with in other database environments
-
-        :param query_results: the results from a SQL query
-        :type query_results: list of dict
-        :param coerce_to_timestamp: True if you want all datetime fields to be converted into Unix timestamps.
-            False if you want them to be left in the same format as they were in Salesforce.
-            Leaving the value as False will result in datetimes being strings. Default: False
-        :type coerce_to_timestamp: bool
-        :param record_time_added: True if you want to add a Unix timestamp field
-            to the resulting data that marks when the data was fetched from Salesforce. Default: False
-        :type record_time_added: bool
-        :return: the dataframe.
-        :rtype: pandas.Dataframe
-        """
-        # this line right here will convert all integers to floats
-        # if there are any None/np.nan values in the column
-        # that's because None/np.nan cannot exist in an integer column
-        # we should write all of our timestamps as FLOATS in our final schema
-        df = pd.DataFrame.from_records(query_results, exclude=["attributes"])
-
-        df.columns = [column.lower() for column in df.columns]
-
-        # convert columns with datetime strings to datetimes
-        # not all strings will be datetimes, so we ignore any errors that occur
-        # we get the object's definition at this point and only consider
-        # features that are DATE or DATETIME
-        if coerce_to_timestamp and df.shape[0] > 0:
-            # get the object name out of the query results
-            # it's stored in the "attributes" dictionary
-            # for each returned record
-            object_name = query_results[0]['attributes']['type']
-
-            self.log.info("Coercing timestamps for: %s", object_name)
-
-            schema = self.describe_object(object_name)
-
-            # possible columns that can be converted to timestamps
-            # are the ones that are either date or datetime types
-            # strings are too general and we risk unintentional conversion
-            possible_timestamp_cols = [
-                field['name'].lower()
-                for field in schema['fields']
-                if field['type'] in ["date", "datetime"] and field['name'].lower() in df.columns
-            ]
-            df[possible_timestamp_cols] = df[possible_timestamp_cols].apply(self._to_timestamp)
-
-        if record_time_added:
-            fetched_time = time.time()
-            df["time_fetched_from_salesforce"] = fetched_time
 
         return df
