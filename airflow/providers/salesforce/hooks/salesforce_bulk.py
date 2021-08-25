@@ -29,7 +29,6 @@ from typing import Any, Dict, Iterable, List, Optional
 
 import pandas as pd
 from requests import Session
-
 from simple_salesforce.bulk import SFBulkType
 
 from airflow.providers.salesforce.hooks.salesforce import SalesforceHook
@@ -70,8 +69,12 @@ class SalesforceBulkHook(SalesforceHook):
         """
         conn = self.get_conn()
 
-        sfbulk = SFBulkType(object_name="Contact", bulk_url=self.bulk.bulk_url,
-                            headers=self.bulk.headers, session=self.bulk.session)
+        sfbulk = SFBulkType(
+            object_name="Contact",
+            bulk_url=self.bulk.bulk_url,
+            headers=self.bulk.headers,
+            session=self.bulk.session,
+        )
 
         results = sfbulk.query("select id from Contact")
 
