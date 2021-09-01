@@ -68,7 +68,7 @@ class SalesforceBulkHook(SalesforceHook):
         """
         conn = self.get_conn()
 
-        #query_results = self.bulk.query_all(query, include_deleted=include_deleted, **query_params)
+        # query_results = self.bulk.query_all(query, include_deleted=include_deleted, **query_params)
 
         sfbulk = SFBulkType(
             object_name="Contact",
