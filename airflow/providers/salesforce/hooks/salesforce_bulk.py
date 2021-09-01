@@ -38,8 +38,7 @@ log = logging.getLogger(__name__)
 
 class SalesforceBulkHook(SalesforceHook):
     """
-    Creates new connection to Salesforce Bulkd API and allows
-        you to pull data out of SFDC and save it to a file.
+    Creates new connection to Salesforce Bulk API
     """
 
     default_conn_name = "salesforce_default"
@@ -69,6 +68,8 @@ class SalesforceBulkHook(SalesforceHook):
         """
         conn = self.get_conn()
 
+        #query_results = self.bulk.query_all(query, include_deleted=include_deleted, **query_params)
+
         sfbulk = SFBulkType(
             object_name="Contact",
             bulk_url=self.bulk.bulk_url,
@@ -78,15 +79,17 @@ class SalesforceBulkHook(SalesforceHook):
 
         results = sfbulk.query("select id from Contact")
 
-        self.log.info("Querying for all objects")
-        query_params = query_params or {}
-        query_results = conn.query_all(query, include_deleted=include_deleted, **query_params)
+        print(results)
+        #
+        # self.log.info("Querying for all objects")
+        # query_params = query_params or {}
+        # query_results = conn.query_all(query, include_deleted=include_deleted, **query_params)
 
-        self.log.info(
-            "Received results: Total size: %s; Done: %s", query_results['totalSize'], query_results['done']
-        )
-
-        return query_results
+        # self.log.info(
+        #     "Received results: Total size: %s; Done: %s", query_results['totalSize'], query_results['done']
+        # )
+        #
+        # return query_results
 
     def get_object_from_salesforce(self, obj: str, fields: Iterable[str]) -> dict:
         """
@@ -111,44 +114,6 @@ class SalesforceBulkHook(SalesforceHook):
         )
 
         return self.make_query(query)
-
-    @classmethod
-    def _to_timestamp(cls, column: pd.Series) -> pd.Series:
-        """
-        Convert a column of a dataframe to UNIX timestamps if applicable
-
-        :param column: A Series object representing a column of a dataframe.
-        :type column: pandas.Series
-        :return: a new series that maintains the same index as the original
-        :rtype: pandas.Series
-        """
-        # try and convert the column to datetimes
-        # the column MUST have a four digit year somewhere in the string
-        # there should be a better way to do this,
-        # but just letting pandas try and convert every column without a format
-        # caused it to convert floats as well
-        # For example, a column of integers
-        # between 0 and 10 are turned into timestamps
-        # if the column cannot be converted,
-        # just return the original column untouched
-        try:
-            column = pd.to_datetime(column)
-        except ValueError:
-            log.error("Could not convert field to timestamps: %s", column.name)
-            return column
-
-        # now convert the newly created datetimes into timestamps
-        # we have to be careful here
-        # because NaT cannot be converted to a timestamp
-        # so we have to return NaN
-        converted = []
-        for value in column:
-            try:
-                converted.append(value.timestamp())
-            except (ValueError, AttributeError):
-                converted.append(pd.np.NaN)
-
-        return pd.Series(converted, index=column.index)
 
     def write_object_to_file(
         self,
