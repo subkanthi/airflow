@@ -250,7 +250,7 @@ repos:
         exclude: |
           (?x)
           ^airflow/_vendor/
-  - repo: https://github.com/ikamensh/flynt/
+  - repo: https://github.com/ikamensh/flynt
     rev: '0.66'
     hooks:
       - id: flynt
@@ -508,11 +508,18 @@ repos:
         # Keep dependency versions in sync w/ airflow/www/package.json
         additional_dependencies: ['stylelint@13.3.1', 'stylelint-config-standard@20.0.0']
       - id: providers-init-file
-        name: Provider init file
+        name: Provider init file is missing
         pass_filenames: false
         always_run: true
         entry: ./scripts/ci/pre_commit/pre_commit_check_providers_init.sh
         language: system
+      - id: providers-subpackages-init-file
+        name: Provider subpackage init files are there
+        pass_filenames: false
+        always_run: true
+        entry: ./scripts/ci/pre_commit/pre_commit_check_providers_subpackages_all_have_init.py
+        language: python
+        require_serial: true
       - id: provider-yamls
         name: Validate providers.yaml files
         pass_filenames: false
@@ -520,7 +527,11 @@ repos:
         language: python
         require_serial: true
         files: provider\.yaml$|scripts/ci/pre_commit/pre_commit_check_provider_yaml_files\.py$|^docs/
-        additional_dependencies: ['PyYAML==5.3.1', 'jsonschema==3.2.0', 'tabulate==0.8.7']
+        additional_dependencies:
+          - 'PyYAML==5.3.1'
+          - 'jsonschema==3.2.0'
+          - 'tabulate==0.8.7'
+          - 'jsonpath-ng==1.5.3'
       - id: mermaid
         name: Generate mermaid images
         entry: ./scripts/ci/pre_commit/pre_commit_mermaid.sh
