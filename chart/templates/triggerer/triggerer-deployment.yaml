@@ -33,7 +33,7 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
     {{- with .Values.labels }}
-    {{- toYaml . | indent 4 }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   replicas: {{ .Values.triggerer.replicas }}
@@ -67,6 +67,9 @@ spec:
         {{- if .Values.airflowPodAnnotations }}
         {{- toYaml .Values.airflowPodAnnotations | nindent 8 }}
         {{- end }}
+        {{- if .Values.triggerer.podAnnotations }}
+        {{- toYaml .Values.triggerer.podAnnotations | nindent 8 }}
+        {{- end }}
     spec:
       nodeSelector:
         {{- toYaml $nodeSelector | nindent 8 }}
@@ -88,7 +91,7 @@ spec:
         - name: wait-for-airflow-migrations
           resources:
             {{- toYaml .Values.triggerer.resources | nindent 12 }}
-          image: {{ template "airflow_image" . }}
+          image: {{ template "airflow_image_for_migrations" . }}
           imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
           args:
           {{- include "wait-for-migrations-command" . | nindent 10 }}

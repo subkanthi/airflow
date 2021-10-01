@@ -36,7 +36,6 @@ from sqlalchemy.orm.session import Session, make_transient
 from airflow import models, settings
 from airflow.configuration import conf
 from airflow.dag_processing.manager import DagFileProcessorAgent
-from airflow.exceptions import SerializedDagNotFound
 from airflow.executors.executor_loader import UNPICKLEABLE_EXECUTORS
 from airflow.jobs.base_job import BaseJob
 from airflow.models import DAG
@@ -521,14 +520,24 @@ class SchedulerJob(BaseJob):
                 )
                 self.log.error(msg, ti, state, ti.state, info)
 
-                request = TaskCallbackRequest(
-                    full_filepath=ti.dag_model.fileloc,
-                    simple_task_instance=SimpleTaskInstance(ti),
-                    msg=msg % (ti, state, ti.state, info),
-                )
-                self.log.info('Setting task instance %s state to %s as reported by executor', ti, state)
-                ti.set_state(state)
-                self.processor_agent.send_callback_to_execute(request)
+                # Get task from the Serialized DAG
+                try:
+                    dag = self.dagbag.get_dag(ti.dag_id)
+                    task = dag.get_task(ti.task_id)
+                except Exception:
+                    self.log.exception("Marking task instance %s as %s", ti, state)
+                    ti.set_state(state)
+                    continue
+                ti.task = task
+                if task.on_retry_callback or task.on_failure_callback:
+                    request = TaskCallbackRequest(
+                        full_filepath=ti.dag_model.fileloc,
+                        simple_task_instance=SimpleTaskInstance(ti),
+                        msg=msg % (ti, state, ti.state, info),
+                    )
+                    self.processor_agent.send_callback_to_execute(request)
+                else:
+                    ti.handle_failure(error=msg % (ti, state, ti.state, info), session=session)
 
         return len(event_buffer)
 
@@ -729,18 +738,8 @@ class SchedulerJob(BaseJob):
 
             callback_tuples = []
             for dag_run in dag_runs:
-                # Use try_except to not stop the Scheduler when a Serialized DAG is not found
-                # This takes care of Dynamic DAGs especially
-                # SerializedDagNotFound should not happen here in the same loop because the DagRun would
-                # not be created in self._create_dag_runs if Serialized DAG does not exist
-                # But this would take care of the scenario when the Scheduler is restarted after DagRun is
-                # created and the DAG is deleted / renamed
-                try:
-                    callback_to_run = self._schedule_dag_run(dag_run, session)
-                    callback_tuples.append((dag_run, callback_to_run))
-                except SerializedDagNotFound:
-                    self.log.exception("DAG '%s' not found in serialized_dag table", dag_run.dag_id)
-                    continue
+                callback_to_run = self._schedule_dag_run(dag_run, session)
+                callback_tuples.append((dag_run, callback_to_run))
 
             guard.commit()
 
@@ -843,10 +842,9 @@ class SchedulerJob(BaseJob):
             if total_queued >= max_queued_dagruns:
                 continue
 
-            try:
-                dag = self.dagbag.get_dag(dag_model.dag_id, session=session)
-            except SerializedDagNotFound:
-                self.log.exception("DAG '%s' not found in serialized_dag table", dag_model.dag_id)
+            dag = self.dagbag.get_dag(dag_model.dag_id, session=session)
+            if not dag:
+                self.log.error("DAG '%s' not found in serialized_dag table", dag_model.dag_id)
                 continue
             dag_hash = self.dagbag.dags_hash.get(dag.dag_id)
 
@@ -910,10 +908,9 @@ class SchedulerJob(BaseJob):
 
         for dag_run in dag_runs:
 
-            try:
-                dag = dag_run.dag = self.dagbag.get_dag(dag_run.dag_id, session=session)
-            except SerializedDagNotFound:
-                self.log.exception("DAG '%s' not found in serialized_dag table", dag_run.dag_id)
+            dag = dag_run.dag = self.dagbag.get_dag(dag_run.dag_id, session=session)
+            if not dag:
+                self.log.error("DAG '%s' not found in serialized_dag table", dag_run.dag_id)
                 continue
             active_runs = active_runs_of_dags[dag_run.dag_id]
 
