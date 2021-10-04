@@ -52,10 +52,7 @@ class SalesforceBulkHook(SalesforceHook):
     ) -> None:
         super().__init__(salesforce_conn_id, session_id, session)
 
-    def get_conn(self) {
-        super().get_conn()
-    }
-        self, query: str, include_deleted: bool = False, query_params: Optional[dict] = None
+    def make_query(self, query: str, include_deleted: bool = False, query_params: Optional[dict] = None
     ) -> dict:
         """
         Make a query to Salesforce.
