@@ -26,7 +26,8 @@ from tests.helm_template_generator import render_chart
 
 
 class ElasticsearchSecretTest(unittest.TestCase):
-    def test_url_when_pass_not_provided(self):
+    
+    def test_should_not_generate_a_document_if_elasticsearch_disabled(self):
         docs = render_chart(
             values={"elasticsearch": {"enabled": False}},
             show_only=["templates/secrets/elasticsearch-secret.yaml"],
